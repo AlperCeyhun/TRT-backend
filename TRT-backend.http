@@ -1,6 +1,16 @@
-@TRT_backend_HostAddress = http://localhost:5195
+POST http://localhost:5195/api/Task
+Content-Type: application/json
 
-GET {{TRT_backend_HostAddress}}/weatherforecast/
-Accept: application/json
+{
+  "name": "test görev",
+  "status": true
+}
 
 ###
+DELETE http://localhost:5195/api/Task/3
+
+### 
+PUT http://localhost:5195/api/Task/4
+
+###
+GET http://localhost:5195/api/Task
