@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("TRT-backend")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4bd76215ac4d38115347dcf085a6e47d3ae33a1c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+97208893f63921b6d9d7758fee272d9ac2452fad")]
 [assembly: System.Reflection.AssemblyProductAttribute("TRT-backend")]
 [assembly: System.Reflection.AssemblyTitleAttribute("TRT-backend")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
