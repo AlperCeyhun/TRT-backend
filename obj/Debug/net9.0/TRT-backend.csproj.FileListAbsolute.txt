@@ -187,3 +187,7 @@ C:\Users\gkden\TRT-backend\bin\Debug\net9.0\ru\Microsoft.CodeAnalysis.Workspaces
 C:\Users\gkden\TRT-backend\bin\Debug\net9.0\tr\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
 C:\Users\gkden\TRT-backend\bin\Debug\net9.0\zh-Hans\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
 C:\Users\gkden\TRT-backend\bin\Debug\net9.0\zh-Hant\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
+C:\Users\gkden\TRT-backend\bin\Debug\net9.0\package-lock.json
+C:\Users\gkden\TRT-backend\bin\Debug\net9.0\Swashbuckle.AspNetCore.Swagger.dll
+C:\Users\gkden\TRT-backend\bin\Debug\net9.0\Swashbuckle.AspNetCore.SwaggerGen.dll
+C:\Users\gkden\TRT-backend\bin\Debug\net9.0\Swashbuckle.AspNetCore.SwaggerUI.dll

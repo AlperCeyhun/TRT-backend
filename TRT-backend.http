@@ -2,7 +2,7 @@ POST http://localhost:5195/api/Task
 Content-Type: application/json
 
 {
-  "name": "test görev",
+  "title": "test görev",
   "status": true
 }
 

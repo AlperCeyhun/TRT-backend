@@ -7,7 +7,7 @@ namespace TRT_backend.Models
         public int Id { get; set; }
 
         [Required(ErrorMessage = "It can't be empty.")]
-        public string Name { get; set; }
+        public string Title { get; set; }
 
         [Required(ErrorMessage = "It can't be empty.")]
         public bool Status { get; set; }

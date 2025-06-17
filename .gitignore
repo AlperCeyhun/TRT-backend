@@ -33,4 +33,8 @@ bld/
 *.db-wal
 
 # Visual Studio Code
-.vscode/ 
+.vscode/
+
+# Node.js
+node_modules/
+package-lock.json 

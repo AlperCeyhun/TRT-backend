@@ -35,7 +35,8 @@ namespace TRT_backend.Controllers
             return Ok(tasks);
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete]
+        [Route("{id}")]
         public IActionResult Delete(int id)
         {
             var task = _context.Tasks.Find(id);
@@ -49,7 +50,8 @@ namespace TRT_backend.Controllers
             return Ok();
         }
 
-        [HttpPut("{id}")]
+        [HttpPut]
+        [Route("{id}")]
         public IActionResult Update(int id)
         {
             var existingTask = _context.Tasks.Find(id);
@@ -58,7 +60,6 @@ namespace TRT_backend.Controllers
                 return NotFound();
             }
 
-            // Status'u toggle yap (true ise false, false ise true)
             existingTask.Status = !existingTask.Status;
 
             _context.SaveChanges();
