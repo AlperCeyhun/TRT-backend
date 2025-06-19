@@ -16,6 +16,18 @@ namespace TRT_backend.Data
             modelBuilder.Entity<TodoTask>()
                 .Property(e => e.Category)
                 .HasConversion<string>();
+
+            // Assignee ile User ilişkisi
+            modelBuilder.Entity<Assignee>()
+                .HasOne(a => a.User)
+                .WithMany(u => u.Assignees)
+                .HasForeignKey(a => a.UserId);
+
+            // Assignee ile Task ilişkisi
+            modelBuilder.Entity<Assignee>()
+                .HasOne(a => a.Task)
+                .WithMany(t => t.Assignees)
+                .HasForeignKey(a => a.TaskId);
         }
     }
 } 

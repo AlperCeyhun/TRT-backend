@@ -19,15 +19,11 @@ namespace TRT_backend.Controllers
         [HttpPost("register")]
         public IActionResult Register([FromBody] RegisterDto dto)
         {
-            if (string.IsNullOrWhiteSpace(dto.UserName) || string.IsNullOrWhiteSpace(dto.Password))
-            {
-                return BadRequest("username and password can't be empty.");
-            }
-            if (_context.Users.Any(u => u.UserName == dto.UserName))
+            if (_context.Users.Any(u => u.username == dto.username))
             {
                 return BadRequest("This user name has already added.");
             }
-            var user = new User { UserName = dto.UserName, Password = dto.Password };
+            var user = new User { username = dto.username, password = dto.password };
             _context.Users.Add(user);
             _context.SaveChanges();
             return Ok("Register Succesfull.");
@@ -36,7 +32,7 @@ namespace TRT_backend.Controllers
         [HttpPost("login")]
         public IActionResult Login([FromBody] LoginDto dto)
         {
-            var user = _context.Users.FirstOrDefault(u => u.UserName == dto.UserName && u.Password == dto.Password);
+            var user = _context.Users.FirstOrDefault(u => u.username == dto.username && u.password == dto.password);
             if (user == null)
             {
                 return Unauthorized("incorrect username or password.");
@@ -46,14 +42,14 @@ namespace TRT_backend.Controllers
 
         public class RegisterDto
         {
-            public string UserName { get; set; }
-            public string Password { get; set; }
+            public string username { get; set; }
+            public string password { get; set; }
         }
 
         public class LoginDto
         {
-            public string UserName { get; set; }
-            public string Password { get; set; }
+            public string username { get; set; }
+            public string password { get; set; }
         }
     }
 } 

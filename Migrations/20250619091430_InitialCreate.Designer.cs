@@ -10,8 +10,8 @@ using TRT_backend.Data;
 namespace TRT_backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250618222812_CategoryEnumToString")]
-    partial class CategoryEnumToString
+    [Migration("20250619091430_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -72,11 +72,11 @@ namespace TRT_backend.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("Password")
+                    b.Property<string>("password")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("UserName")
+                    b.Property<string>("username")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
@@ -87,21 +87,31 @@ namespace TRT_backend.Migrations
 
             modelBuilder.Entity("TRT_backend.Models.Assignee", b =>
                 {
-                    b.HasOne("TRT_backend.Models.TodoTask", "TodoTask")
-                        .WithMany()
+                    b.HasOne("TRT_backend.Models.TodoTask", "Task")
+                        .WithMany("Assignees")
                         .HasForeignKey("TaskId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("TRT_backend.Models.User", "User")
-                        .WithMany()
+                        .WithMany("Assignees")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("TodoTask");
+                    b.Navigation("Task");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("TRT_backend.Models.TodoTask", b =>
+                {
+                    b.Navigation("Assignees");
+                });
+
+            modelBuilder.Entity("TRT_backend.Models.User", b =>
+                {
+                    b.Navigation("Assignees");
                 });
 #pragma warning restore 612, 618
         }

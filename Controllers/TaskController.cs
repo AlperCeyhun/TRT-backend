@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using TRT_backend.Data;
 using TRT_backend.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace TRT_backend.Controllers
 {
@@ -16,22 +17,45 @@ namespace TRT_backend.Controllers
         }
 
         [HttpPost]
-        public IActionResult Create([FromBody] TodoTask task)
+        public IActionResult Create([FromBody] CreateTaskDto dto)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
+            var task = new TodoTask
+            {
+                Title = dto.Title,
+                Description = dto.Description,
+                Category = dto.Category,
+                Completed = dto.Completed
+            };
             _context.Tasks.Add(task);
             _context.SaveChanges();
+
             return Ok(task);
         }
 
         [HttpGet]
         public IActionResult GetAll()
         {
-            var tasks = _context.Tasks.ToList();
+            var tasks = _context.Tasks
+                .Include(t => t.Assignees)
+                .ThenInclude(a => a.User)
+                .Select(t => new {
+                    t.Id,
+                    t.Title,
+                    t.Description,
+                    t.Category,
+                    t.Completed,
+                    Assignees = t.Assignees.Select(a => new {
+                        a.UserId,
+                        a.User.username
+                    }).ToList()
+                })
+                .ToList();
+
             return Ok(tasks);
         }
 
@@ -70,6 +94,14 @@ namespace TRT_backend.Controllers
         }
 
         public class UpdateTaskDto
+        {
+            public string Title { get; set; }
+            public string Description { get; set; }
+            public TaskCategory Category { get; set; }
+            public bool Completed { get; set; }
+        }
+
+        public class CreateTaskDto
         {
             public string Title { get; set; }
             public string Description { get; set; }

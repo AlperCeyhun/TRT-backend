@@ -12,6 +12,6 @@ namespace TRT_backend.Models
         public User User { get; set; }
         [ForeignKey("TodoTask")]
         public int TaskId { get; set; }
-        public TodoTask TodoTask { get; set; }
+        public TodoTask Task { get; set; }
     }
 }

@@ -70,7 +70,6 @@ C:\Users\gkden\TRT-backend\bin\Debug\net9.0\Microsoft.OpenApi.dll
 C:\Users\gkden\TRT-backend\bin\Debug\net9.0\SQLitePCLRaw.batteries_v2.dll
 C:\Users\gkden\TRT-backend\bin\Debug\net9.0\SQLitePCLRaw.core.dll
 C:\Users\gkden\TRT-backend\bin\Debug\net9.0\SQLitePCLRaw.provider.e_sqlite3.dll
-C:\Users\gkden\TRT-backend\bin\Debug\net9.0\System.Text.Json.dll
 C:\Users\gkden\TRT-backend\bin\Debug\net9.0\runtimes\browser-wasm\nativeassets\net9.0\e_sqlite3.a
 C:\Users\gkden\TRT-backend\bin\Debug\net9.0\runtimes\linux-arm\native\libe_sqlite3.so
 C:\Users\gkden\TRT-backend\bin\Debug\net9.0\runtimes\linux-arm64\native\libe_sqlite3.so

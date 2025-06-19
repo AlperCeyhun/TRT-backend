@@ -5,7 +5,7 @@
 namespace TRT_backend.Migrations
 {
     /// <inheritdoc />
-    public partial class AddCategoryToTodoTask : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -18,7 +18,7 @@ namespace TRT_backend.Migrations
                         .Annotation("Sqlite:Autoincrement", true),
                     Title = table.Column<string>(type: "TEXT", nullable: false),
                     Description = table.Column<string>(type: "TEXT", nullable: false),
-                    Category = table.Column<int>(type: "INTEGER", nullable: false),
+                    Category = table.Column<string>(type: "TEXT", nullable: false),
                     Completed = table.Column<bool>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
@@ -32,8 +32,8 @@ namespace TRT_backend.Migrations
                 {
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    UserName = table.Column<string>(type: "TEXT", nullable: false),
-                    Password = table.Column<string>(type: "TEXT", nullable: false)
+                    username = table.Column<string>(type: "TEXT", nullable: false),
+                    password = table.Column<string>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {

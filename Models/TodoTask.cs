@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Collections.Generic;
 
 namespace TRT_backend.Models
 {
@@ -14,6 +15,9 @@ namespace TRT_backend.Models
 
         [Required(ErrorMessage = "It can't be empty.")]
         public bool Completed { get; set; }
+
+        
+        public ICollection<Assignee> Assignees { get; set; }
     }
 
     public enum TaskCategory
