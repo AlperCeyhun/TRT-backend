@@ -38,3 +38,7 @@ bld/
 # Node.js
 node_modules/
 package-lock.json 
+
+#dotnet
+obj/
+bin/
