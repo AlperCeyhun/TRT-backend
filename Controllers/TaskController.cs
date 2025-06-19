@@ -5,7 +5,7 @@ using TRT_backend.Models;
 namespace TRT_backend.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/todo-tasks")]
     public class TaskController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -16,7 +16,7 @@ namespace TRT_backend.Controllers
         }
 
         [HttpPost]
-        public IActionResult Create(TodoTask task)
+        public IActionResult Create([FromBody] TodoTask task)
         {
             if (!ModelState.IsValid)
             {
@@ -52,7 +52,7 @@ namespace TRT_backend.Controllers
 
         [HttpPut]
         [Route("{id}")]
-        public IActionResult Update(int id)
+        public IActionResult Update(int id, [FromBody] UpdateTaskDto updates)
         {
             var existingTask = _context.Tasks.Find(id);
             if (existingTask == null)
@@ -60,10 +60,21 @@ namespace TRT_backend.Controllers
                 return NotFound();
             }
 
-            existingTask.Status = !existingTask.Status;
+            existingTask.Title = updates.Title;
+            existingTask.Description = updates.Description;
+            existingTask.Category = updates.Category;
+            existingTask.Completed = updates.Completed;
 
             _context.SaveChanges();
             return Ok(existingTask);
+        }
+
+        public class UpdateTaskDto
+        {
+            public string Title { get; set; }
+            public string Description { get; set; }
+            public TaskCategory Category { get; set; }
+            public bool Completed { get; set; }
         }
     }
 } 

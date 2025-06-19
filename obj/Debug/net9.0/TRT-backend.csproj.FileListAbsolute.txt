@@ -191,3 +191,11 @@ C:\Users\gkden\TRT-backend\bin\Debug\net9.0\package-lock.json
 C:\Users\gkden\TRT-backend\bin\Debug\net9.0\Swashbuckle.AspNetCore.Swagger.dll
 C:\Users\gkden\TRT-backend\bin\Debug\net9.0\Swashbuckle.AspNetCore.SwaggerGen.dll
 C:\Users\gkden\TRT-backend\bin\Debug\net9.0\Swashbuckle.AspNetCore.SwaggerUI.dll
+C:\Users\gkden\TRT-backend\bin\Debug\net9.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
+C:\Users\gkden\TRT-backend\bin\Debug\net9.0\Microsoft.IdentityModel.Abstractions.dll
+C:\Users\gkden\TRT-backend\bin\Debug\net9.0\Microsoft.IdentityModel.JsonWebTokens.dll
+C:\Users\gkden\TRT-backend\bin\Debug\net9.0\Microsoft.IdentityModel.Logging.dll
+C:\Users\gkden\TRT-backend\bin\Debug\net9.0\Microsoft.IdentityModel.Protocols.dll
+C:\Users\gkden\TRT-backend\bin\Debug\net9.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+C:\Users\gkden\TRT-backend\bin\Debug\net9.0\Microsoft.IdentityModel.Tokens.dll
+C:\Users\gkden\TRT-backend\bin\Debug\net9.0\System.IdentityModel.Tokens.Jwt.dll
