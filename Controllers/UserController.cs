@@ -16,6 +16,13 @@ namespace TRT_backend.Controllers
             _context = context;
         }
 
+        [HttpGet]
+        public IActionResult GetAllUsers()
+        {
+            var users = _context.Users.ToList();
+            return Ok(users);
+        }
+
         [HttpPost("register")]
         public IActionResult Register([FromBody] RegisterDto dto)
         {
