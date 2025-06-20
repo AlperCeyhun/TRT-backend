@@ -25,7 +25,13 @@ namespace TRT_backend.Controllers
         [HttpGet]
         public IActionResult GetAllUsers()
         {
-            var users = _context.Users.ToList();
+            var users = _context.Users
+                .Select(u => new UserDto {
+                    Id = u.Id,
+                    username = u.username
+                })
+                .ToList();
+                
             return Ok(users);
         }
 
@@ -85,6 +91,11 @@ namespace TRT_backend.Controllers
         {
             public string username { get; set; }
             public string password { get; set; }
+        }
+        public class UserDto
+        {
+            public int Id { get; set; }
+            public string username { get; set; }
         }
     }
 } 

@@ -23,12 +23,12 @@ namespace TRT_backend.Controllers
         {
             var task = _context.Tasks.Find(taskId);
             if (task == null)
-                return NotFound("Task bulunamadı.");
+                return NotFound("Task not found.");
 
             foreach (var userId in userIds)
             {
                 if (!_context.Users.Any(u => u.Id == userId))
-                    return NotFound($"Kullanıcı bulunamadı: {userId}");
+                    return NotFound($"User not found: {userId}");
 
                
                 if (!_context.Assignees.Any(a => a.TaskId == taskId && a.UserId == userId))
@@ -42,7 +42,7 @@ namespace TRT_backend.Controllers
                 }
             }
             _context.SaveChanges();
-            return Ok("Kullanıcı(lar) başarıyla atandı.");
+            return Ok("User(s) assigned successfully.");
         }
 
         [HttpGet("task/{taskId}")]
@@ -69,16 +69,18 @@ namespace TRT_backend.Controllers
         }
 
        
-        [HttpDelete("{assigneeId}")]
-        public IActionResult DeleteAssignee(int assigneeId)
+        [HttpDelete]
+        public IActionResult UnassignUserFromTask(int taskId, int userId)
         {
-            var assignee = _context.Assignees.Find(assigneeId);
+            var assignee = _context.Assignees.FirstOrDefault(a => a.TaskId == taskId && a.UserId == userId);
             if (assignee == null)
-                return NotFound("Assignee bulunamadı.");
+            {
+                return NotFound("No such task was found assigned to this user.");
+            }
 
             _context.Assignees.Remove(assignee);
             _context.SaveChanges();
-            return Ok("Assignee silindi.");
+            return Ok("User's task assignment was removed successfully.");
         }
     }
 } 
