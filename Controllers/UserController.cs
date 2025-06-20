@@ -2,6 +2,10 @@ using Microsoft.AspNetCore.Mvc;
 using TRT_backend.Data;
 using TRT_backend.Models;
 using System.Linq;
+using System.Text;
+using System.IdentityModel.Tokens.Jwt;
+using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
 
 namespace TRT_backend.Controllers
 {
@@ -10,11 +14,13 @@ namespace TRT_backend.Controllers
     public class UserController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly IConfiguration _config;
 
-        public UserController(AppDbContext context)
+        public UserController(AppDbContext context, IConfiguration config)
         {
             _context = context;
-        }
+            _config = config;
+       } 
 
         [HttpGet]
         public IActionResult GetAllUsers()
@@ -40,12 +46,34 @@ namespace TRT_backend.Controllers
         public IActionResult Login([FromBody] LoginDto dto)
         {
             var user = _context.Users.FirstOrDefault(u => u.username == dto.username && u.password == dto.password);
+        
             if (user == null)
             {
-                return Unauthorized("incorrect username or password.");
+                return Unauthorized("Incorrect username or password.");
             }
-            return Ok("login succesfull.");
-        }
+        
+            // Token üret
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(_config["Jwt:Key"]);
+        
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new[]
+                {
+                    new Claim(ClaimTypes.Name, user.username),
+                    new Claim("UserId", user.Id.ToString())
+                }),
+                Expires = DateTime.UtcNow.AddHours(1),
+                Issuer = _config["Jwt:Issuer"],
+                Audience = _config["Jwt:Audience"],
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+
+              var token = tokenHandler.CreateToken(tokenDescriptor);
+              var tokenString = tokenHandler.WriteToken(token);
+
+              return Ok(new { Token = tokenString });
+     }
 
         public class RegisterDto
         {
