@@ -38,26 +38,24 @@ namespace TRT_backend.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetAll()
+        public IActionResult GetTasks(int pageNumber = 1, int pageSize = 2)
         {
-            var tasks = _context.Tasks
-                .Include(t => t.Assignees)
-                .ThenInclude(a => a.User)
-                .Select(t => new {
-                    t.Id,
-                    t.Title,
-                    t.Description,
-                    t.Category,
-                    t.Completed,
-                    Assignees = t.Assignees.Select(a => new {
-                        a.UserId,
-                        a.User.username
-                    }).ToList()
-                })
-                .ToList();
+            var pagedTasks = _context.Tasks
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
 
-            return Ok(tasks);
+            var totalCount = _context.Tasks.Count();
+
+            return Ok(new
+          {
+            Data = pagedTasks,
+            TotalCount = totalCount,
+            PageNumber = pageNumber,
+            PageSize = pageSize
+          });
         }
+
 
         [HttpDelete]
         [Route("{id}")]

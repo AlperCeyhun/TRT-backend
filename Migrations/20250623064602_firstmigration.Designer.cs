@@ -11,8 +11,8 @@ using TRT_backend.Data;
 namespace TRT_backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250620115331_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20250623064602_firstmigration")]
+    partial class firstmigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
