@@ -4,6 +4,8 @@ using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using TRT_backend.Hubs;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -43,6 +45,8 @@ builder.Services.AddControllers()
     {
         options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
     });
+
+builder.Services.AddSignalR();
     
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -84,11 +88,11 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI(c =>
+    app.UseSwaggerUI(); /*(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "Todo API V1");
         c.RoutePrefix = "swagger";
-    });
+    }); */
 }
 app.UseAuthentication();
 app.UseAuthorization();
@@ -98,5 +102,11 @@ app.UseHttpsRedirection();
 app.UseCors("AllowAll");
 
 app.MapControllers();
+
+// Add this using directive at the top of your file:
+
+
+// Then map the hub as follows:
+app.MapHub<ChatHub>("/chathub");
 
 app.Run();

@@ -87,9 +87,24 @@ namespace TRT_backend.Controllers
                     }).ToList()
                 })
                 .ToListAsync();
+        public IActionResult GetTasks(int pageNumber = 1, int pageSize = 2)
+        {
+            var pagedTasks = _context.Tasks
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
 
-            return Ok(tasks);
+            var totalCount = _context.Tasks.Count();
+
+            return Ok(new
+          {
+            Data = pagedTasks,
+            TotalCount = totalCount,
+            PageNumber = pageNumber,
+            PageSize = pageSize
+          });
         }
+
 
         [HttpDelete]
         [Route("{id}")]
