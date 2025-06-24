@@ -3,6 +3,7 @@ using TRT_backend.Data;
 using TRT_backend.Models;
 using System.Linq;
 using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
 
 namespace TRT_backend.Controllers
 {
@@ -19,19 +20,18 @@ namespace TRT_backend.Controllers
 
         
         [HttpPost("assign")]
-        public IActionResult AssignUsersToTask(int taskId, [FromBody] List<int> userIds)
+        public async Task<IActionResult> AssignUsersToTask(int taskId, [FromBody] List<int> userIds)
         {
-            var task = _context.Tasks.Find(taskId);
+            var task = await _context.Tasks.FindAsync(taskId);
             if (task == null)
                 return NotFound("Task not found.");
 
             foreach (var userId in userIds)
             {
-                if (!_context.Users.Any(u => u.Id == userId))
+                if (!await _context.Users.AnyAsync(u => u.Id == userId))
                     return NotFound($"User not found: {userId}");
 
-               
-                if (!_context.Assignees.Any(a => a.TaskId == taskId && a.UserId == userId))
+                if (!await _context.Assignees.AnyAsync(a => a.TaskId == taskId && a.UserId == userId))
                 {
                     var assignee = new Assignee
                     {
@@ -41,45 +41,45 @@ namespace TRT_backend.Controllers
                     _context.Assignees.Add(assignee);
                 }
             }
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
             return Ok("User(s) assigned successfully.");
         }
 
         [HttpGet("task/{taskId}")]
-        public IActionResult GetAssigneesForTask(int taskId)
+        public async Task<IActionResult> GetAssigneesForTask(int taskId)
         {
-            var assignees = _context.Assignees
+            var assignees = await _context.Assignees
                 .Where(a => a.TaskId == taskId)
                 .Select(a => new { a.UserId, a.User.username })
-                .ToList();
+                .ToListAsync();
 
             return Ok(assignees);
         }
 
         
         [HttpGet("user/{userId}")]
-        public IActionResult GetTasksForUser(int userId)
+        public async Task<IActionResult> GetTasksForUser(int userId)
         {
-            var tasks = _context.Assignees
+            var tasks = await _context.Assignees
                 .Where(a => a.UserId == userId)
                 .Select(a => new { a.TaskId, a.Task.Title, a.Task.Description })
-                .ToList();
+                .ToListAsync();
 
             return Ok(tasks);
         }
 
        
         [HttpDelete]
-        public IActionResult UnassignUserFromTask(int taskId, int userId)
+        public async Task<IActionResult> UnassignUserFromTask(int taskId, int userId)
         {
-            var assignee = _context.Assignees.FirstOrDefault(a => a.TaskId == taskId && a.UserId == userId);
+            var assignee = await _context.Assignees.FirstOrDefaultAsync(a => a.TaskId == taskId && a.UserId == userId);
             if (assignee == null)
             {
                 return NotFound("No such task was found assigned to this user.");
             }
 
             _context.Assignees.Remove(assignee);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
             return Ok("User's task assignment was removed successfully.");
         }
     }

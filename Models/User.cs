@@ -14,5 +14,7 @@ namespace TRT_backend.Models
         
         
         public ICollection<Assignee> Assignees { get; set; }
+        public ICollection<UserRole> UserRoles { get; set; }
+        public ICollection<UserClaim> UserClaims { get; set; }
     }
 }
