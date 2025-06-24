@@ -39,7 +39,7 @@ namespace TRT_backend.Controllers
         {
             int userId = GetUserIdFromToken();
             if (!HasClaim(userId, "Add Task"))
-                return StatusCode(403, "Bu işlemi yapmaya yetkiniz yok.");
+                return StatusCode(403, "You dont have permission to add task.");
 
             var task = new TodoTask
             {
