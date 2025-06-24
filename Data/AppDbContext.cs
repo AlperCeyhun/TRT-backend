@@ -71,7 +71,8 @@ namespace TRT_backend.Data
                 new Claims { Id = 4, ClaimName = "Edit Task Description" },
                 new Claims { Id = 5, ClaimName = "Edit Task Status" },
                 new Claims { Id = 6, ClaimName = "Edit Task Assignees" },
-                new Claims { Id = 7, ClaimName = "Add Claim to User" }
+                new Claims { Id = 7, ClaimName = "Add Claim to User" },
+                new Claims { Id = 8, ClaimName = "Delete Task" }
             );
 
             modelBuilder.Entity<Role>().HasData(
@@ -86,7 +87,8 @@ namespace TRT_backend.Data
                 new RoleClaim { Id = 4, RoleId = 1, ClaimId = 4 }, // Edit Task Description
                 new RoleClaim { Id = 5, RoleId = 1, ClaimId = 5 }, // Edit Task Status
                 new RoleClaim { Id = 6, RoleId = 1, ClaimId = 6 }, // Edit Task Assignees
-                new RoleClaim { Id = 7, RoleId = 1, ClaimId = 7 }  // Add Claim to User
+                new RoleClaim { Id = 7, RoleId = 1, ClaimId = 7 }, // Add Claim to User
+                new RoleClaim { Id = 8, RoleId = 1, ClaimId = 8 }  // Delete Task
             );
 
         

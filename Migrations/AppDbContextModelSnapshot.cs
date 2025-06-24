@@ -95,6 +95,11 @@ namespace TRT_backend.Migrations
                         {
                             Id = 7,
                             ClaimName = "Add Claim to User"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            ClaimName = "Delete Task"
                         });
                 });
 
@@ -191,6 +196,12 @@ namespace TRT_backend.Migrations
                             Id = 7,
                             ClaimId = 7,
                             RoleId = 1
+                        },
+                        new
+                        {
+                            Id = 8,
+                            ClaimId = 8,
+                            RoleId = 1
                         });
                 });
 
@@ -240,14 +251,6 @@ namespace TRT_backend.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Users");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            password = "admin123",
-                            username = "admin"
-                        });
                 });
 
             modelBuilder.Entity("TRT_backend.Models.UserClaim", b =>
@@ -294,14 +297,6 @@ namespace TRT_backend.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("UserRoles");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            RoleId = 1,
-                            UserId = 1
-                        });
                 });
 
             modelBuilder.Entity("TRT_backend.Models.Assignee", b =>

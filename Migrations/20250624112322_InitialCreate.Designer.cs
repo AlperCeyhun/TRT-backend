@@ -11,8 +11,8 @@ using TRT_backend.Data;
 namespace TRT_backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250623121009_InitialFullSeed")]
-    partial class InitialFullSeed
+    [Migration("20250624112322_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -98,6 +98,11 @@ namespace TRT_backend.Migrations
                         {
                             Id = 7,
                             ClaimName = "Add Claim to User"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            ClaimName = "Delete Task"
                         });
                 });
 
@@ -193,6 +198,12 @@ namespace TRT_backend.Migrations
                         {
                             Id = 7,
                             ClaimId = 7,
+                            RoleId = 1
+                        },
+                        new
+                        {
+                            Id = 8,
+                            ClaimId = 8,
                             RoleId = 1
                         });
                 });

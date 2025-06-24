@@ -7,7 +7,7 @@
 namespace TRT_backend.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialFullSeed : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -183,7 +183,8 @@ namespace TRT_backend.Migrations
                     { 4, "Edit Task Description" },
                     { 5, "Edit Task Status" },
                     { 6, "Edit Task Assignees" },
-                    { 7, "Add Claim to User" }
+                    { 7, "Add Claim to User" },
+                    { 8, "Delete Task" }
                 });
 
             migrationBuilder.InsertData(
@@ -206,7 +207,8 @@ namespace TRT_backend.Migrations
                     { 4, 4, 1 },
                     { 5, 5, 1 },
                     { 6, 6, 1 },
-                    { 7, 7, 1 }
+                    { 7, 7, 1 },
+                    { 8, 8, 1 }
                 });
 
             migrationBuilder.CreateIndex(

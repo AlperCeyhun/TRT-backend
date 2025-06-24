@@ -11,8 +11,8 @@ using TRT_backend.Data;
 namespace TRT_backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250623130224_SeedAdminUser")]
-    partial class SeedAdminUser
+    [Migration("20250624113104_InitialFullSeed")]
+    partial class InitialFullSeed
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -98,6 +98,11 @@ namespace TRT_backend.Migrations
                         {
                             Id = 7,
                             ClaimName = "Add Claim to User"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            ClaimName = "Delete Task"
                         });
                 });
 
@@ -194,6 +199,12 @@ namespace TRT_backend.Migrations
                             Id = 7,
                             ClaimId = 7,
                             RoleId = 1
+                        },
+                        new
+                        {
+                            Id = 8,
+                            ClaimId = 8,
+                            RoleId = 1
                         });
                 });
 
@@ -243,14 +254,6 @@ namespace TRT_backend.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Users");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            password = "admin123",
-                            username = "admin"
-                        });
                 });
 
             modelBuilder.Entity("TRT_backend.Models.UserClaim", b =>
@@ -297,14 +300,6 @@ namespace TRT_backend.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("UserRoles");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            RoleId = 1,
-                            UserId = 1
-                        });
                 });
 
             modelBuilder.Entity("TRT_backend.Models.Assignee", b =>
