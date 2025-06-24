@@ -10,8 +10,8 @@ namespace TRT_backend.Models
         [ForeignKey("Role")]
         public int RoleId { get; set; }
         public Role Role { get; set; }
-        [ForeignKey("Claim")]
+        [ForeignKey("Claims")]
         public int ClaimId { get; set; }
-        public Claim Claim { get; set; }
+        public Claims Claim { get; set; }
     }
 } 

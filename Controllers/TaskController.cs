@@ -16,23 +16,11 @@ namespace TRT_backend.Controllers
             _context = context;
         }
 
-        
-        private bool HasClaim(int userId, string claimName)
+        private bool HasClaim(string claimName)
         {
-            
-            var roleClaimIds = _context.UserRoles
-                .Where(ur => ur.UserId == userId)
-                .SelectMany(ur => _context.RoleClaims.Where(rc => rc.RoleId == ur.RoleId).Select(rc => rc.ClaimId))
-                .ToList();
-            var roleClaims = _context.Claims.Where(c => roleClaimIds.Contains(c.Id)).Select(c => c.ClaimName);
-            
-            var userClaimNames = _context.UserClaims.Where(uc => uc.UserId == userId).Select(uc => uc.Claim.ClaimName);
-            
-            var allClaims = roleClaims.Concat(userClaimNames).Distinct();
-            return allClaims.Contains(claimName);
+            return User.Claims.Any(c => c.Type == "permission" && c.Value == claimName);
         }
 
-        
         private int GetUserIdFromToken()
         {
             var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "UserId");
@@ -43,8 +31,8 @@ namespace TRT_backend.Controllers
         public async Task<IActionResult> Create([FromBody] CreateTaskDto dto)
         {
             int userId = GetUserIdFromToken();
-            if (!HasClaim(userId, "Add Task"))
-                return Forbid("You do not have permission to perform this action.");
+            if (!HasClaim("Add Task"))
+                return StatusCode(403, "You dont have permission to add task.");
 
             var task = new TodoTask
             {
@@ -56,11 +44,20 @@ namespace TRT_backend.Controllers
             _context.Tasks.Add(task);
             await _context.SaveChangesAsync();
 
-            
             _context.Assignees.Add(new Assignee { TaskId = task.Id, UserId = userId });
             await _context.SaveChangesAsync();
 
-            return Ok(task);
+            // Sadece temel alanları içeren bir DTO dön
+            var result = new
+            {
+                task.Id,
+                task.Title,
+                task.Description,
+                task.Category,
+                task.Completed
+            };
+
+            return Ok(result);
         }
 
         [HttpGet]
@@ -71,10 +68,10 @@ namespace TRT_backend.Controllers
             bool isAdmin = _context.UserRoles.Any(ur => ur.UserId == userId && ur.Role.RoleName == "Admin");
             var query = _context.Tasks
                 .Include(t => t.Assignees)
-                .ThenInclude(a => a.User);
+                .ThenInclude(a => a.User)
+                .AsQueryable();
             if (!isAdmin)
             {
-                
                 query = query.Where(t => t.Assignees.Any(a => a.UserId == userId));
             }
             var tasks = await query
@@ -99,8 +96,8 @@ namespace TRT_backend.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             int userId = GetUserIdFromToken();
-            if (!HasClaim(userId, "Delete Task"))
-                return Forbid("You do not have permission to perform this action.");
+            if (!HasClaim("Delete Task"))
+                return StatusCode(403, "You are not authorized to perform this operation.");
 
             var task = await _context.Tasks.FindAsync(id);
             if (task == null)
@@ -110,7 +107,7 @@ namespace TRT_backend.Controllers
             
             bool isAdmin = _context.UserRoles.Any(ur => ur.UserId == userId && ur.Role.RoleName == "Admin");
             if (!isAdmin && !_context.Assignees.Any(a => a.TaskId == id && a.UserId == userId))
-                return Forbid("You can only delete the task to which you are assigned.");
+                return StatusCode(403, "You can only delete the task to which you are assigned.");
 
             _context.Tasks.Remove(task);
             await _context.SaveChangesAsync();
@@ -122,8 +119,8 @@ namespace TRT_backend.Controllers
         public async Task<IActionResult> Update(int id, [FromBody] UpdateTaskDto updates)
         {
             int userId = GetUserIdFromToken();
-            if (!HasClaim(userId, "Edit Task"))
-                return Forbid("You do not have permission to perform this action.");
+            if (!HasClaim("Edit Task"))
+                return StatusCode(403, "You are not authorized to perform this operation.");
 
             var existingTask = await _context.Tasks.FindAsync(id);
             if (existingTask == null)
@@ -133,7 +130,7 @@ namespace TRT_backend.Controllers
             
             bool isAdmin = _context.UserRoles.Any(ur => ur.UserId == userId && ur.Role.RoleName == "Admin");
             if (!isAdmin && !_context.Assignees.Any(a => a.TaskId == id && a.UserId == userId))
-                return Forbid("You can only update the task to which you are assigned.");
+                return StatusCode(403, "You can only update the task you are assigned to.");
 
             existingTask.Title = updates.Title;
             existingTask.Description = updates.Description;

@@ -7,6 +7,7 @@ using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace TRT_backend.Controllers
 {
@@ -64,18 +65,35 @@ namespace TRT_backend.Controllers
             {
                 return Unauthorized("Incorrect username or password.");
             }
-        
-            
+
+            // Kullanıcının sahip olduğu tüm claimleri topla
+            var roleClaimIds = _context.UserRoles
+                .Where(ur => ur.UserId == user.User.Id)
+                .SelectMany(ur => _context.RoleClaims.Where(rc => rc.RoleId == ur.RoleId).Select(rc => rc.ClaimId))
+                .ToList();
+            var roleClaims = _context.Claims.Where(c => roleClaimIds.Contains(c.Id)).Select(c => c.ClaimName);
+
+            var userClaimNames = _context.UserClaims.Where(uc => uc.UserId == user.User.Id).Select(uc => uc.Claim.ClaimName);
+
+            var allClaims = roleClaims.Concat(userClaimNames).Distinct().ToList();
+
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, user.User.username),
+                new Claim("UserId", user.User.Id.ToString())
+            };
+
+            foreach (var claimName in allClaims)
+            {
+                claims.Add(new Claim("permission", claimName));
+            }
+
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(_config["Jwt:Key"]);
         
             var tokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = new ClaimsIdentity(new[]
-                {
-                    new Claim(ClaimTypes.Name, user.User.username),
-                    new Claim("UserId", user.User.Id.ToString())
-                }),
+                Subject = new ClaimsIdentity(claims),
                 Expires = DateTime.UtcNow.AddHours(1),
                 Issuer = _config["Jwt:Issuer"],
                 Audience = _config["Jwt:Audience"],
@@ -148,6 +166,29 @@ namespace TRT_backend.Controllers
             _context.UserClaims.Remove(userClaim);
             await _context.SaveChangesAsync();
             return Ok("Claim removed from user.");
+        }
+
+        [AllowAnonymous]
+        [HttpGet("my-claims")]
+        public IActionResult GetMyClaims()
+        {
+            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "UserId");
+            if (userIdClaim == null)
+                return Unauthorized();
+            int userId = int.Parse(userIdClaim.Value);
+
+            // Rollerden gelen claimler
+            var roleClaimIds = _context.UserRoles
+                .Where(ur => ur.UserId == userId)
+                .SelectMany(ur => _context.RoleClaims.Where(rc => rc.RoleId == ur.RoleId).Select(rc => rc.ClaimId))
+                .ToList();
+            var roleClaims = _context.Claims.Where(c => roleClaimIds.Contains(c.Id)).Select(c => c.ClaimName);
+
+            // Kullanıcıya özel claimler
+            var userClaimNames = _context.UserClaims.Where(uc => uc.UserId == userId).Select(uc => uc.Claim.ClaimName);
+
+            var allClaims = roleClaims.Concat(userClaimNames).Distinct().ToList();
+            return Ok(allClaims);
         }
 
         public class RegisterDto
