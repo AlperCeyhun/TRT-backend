@@ -212,6 +212,41 @@ namespace TRT_backend.Controllers
             return Ok(allClaims);
         }
 
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteUser(int id)
+        {
+            int userId = GetUserIdFromToken();
+            bool isAdmin = _context.UserRoles.Any(ur => ur.UserId == userId && ur.Role.RoleName == "Admin");
+            if (!isAdmin && !HasClaim(userId, "Delete User"))
+                return StatusCode(403, "You are not authorized to perform this operation.");
+
+            var user = await _context.Users.FindAsync(id);
+            if (user == null)
+                return NotFound("User not found.");
+
+            // Kullanıcıya ait mesajları sil
+            var fromMessages = _context.Messages.Where(m => m.FromUserId == id);
+            _context.Messages.RemoveRange(fromMessages);
+            var toMessages = _context.Messages.Where(m => m.ToUserId == id);
+            _context.Messages.RemoveRange(toMessages);
+
+            // İlişkili tüm kayıtları sil
+            var userRoles = _context.UserRoles.Where(ur => ur.UserId == id);
+            _context.UserRoles.RemoveRange(userRoles);
+
+            var userClaims = _context.UserClaims.Where(uc => uc.UserId == id);
+            _context.UserClaims.RemoveRange(userClaims);
+
+            var assignees = _context.Assignees.Where(a => a.UserId == id);
+            _context.Assignees.RemoveRange(assignees);
+
+            // Gerekirse başka ilişkili tablolar da eklenebilir
+
+            _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
+            return Ok("User and all related data deleted successfully.");
+        }
+
         private int GetUserIdFromToken()
         {
             var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "UserId");
