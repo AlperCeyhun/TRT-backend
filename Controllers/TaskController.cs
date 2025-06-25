@@ -140,9 +140,7 @@ namespace TRT_backend.Controllers
         public async Task<IActionResult> Update(int id, [FromBody] UpdateTaskDto updates)
         {
             int userId = GetUserIdFromToken();
-            if (!HasClaim(userId, "Edit Task"))
-                return StatusCode(403, "You are not authorized to perform this operation.");
-
+            
             var existingTask = await _context.Tasks.FindAsync(id);
             if (existingTask == null)
             {
@@ -153,10 +151,27 @@ namespace TRT_backend.Controllers
             if (!isAdmin && !_context.Assignees.Any(a => a.TaskId == id && a.UserId == userId))
                 return StatusCode(403, "You can only update the task you are assigned to.");
 
-            existingTask.Title = updates.Title;
-            existingTask.Description = updates.Description;
-            existingTask.Category = updates.Category;
-            existingTask.Completed = updates.Completed;
+            // Sadece admin olmayanlar için, sadece değişen alanlarda claim kontrolü
+            if (!isAdmin) {
+                if (updates.Title != null && updates.Title != existingTask.Title && !HasClaim(userId, "Edit Task Title"))
+                    return StatusCode(403, "You don't have permission to edit task title.");
+                if (updates.Description != null && updates.Description != existingTask.Description && !HasClaim(userId, "Edit Task Description"))
+                    return StatusCode(403, "You don't have permission to edit task description.");
+                if (updates.Completed != null && updates.Completed != existingTask.Completed && !HasClaim(userId, "Edit Task Status"))
+                    return StatusCode(403, "You don't have permission to edit task status.");
+                if (updates.Category != null && updates.Category != existingTask.Category && !HasClaim(userId, "Edit Task Assignees"))
+                    return StatusCode(403, "You don't have permission to edit task category.");
+            }
+
+            // Sadece izin verilen ve değişen alanları güncelle
+            if (updates.Title != null && updates.Title != existingTask.Title)
+                existingTask.Title = updates.Title;
+            if (updates.Description != null && updates.Description != existingTask.Description)
+                existingTask.Description = updates.Description;
+            if (updates.Completed != null && updates.Completed != existingTask.Completed)
+                existingTask.Completed = updates.Completed;
+            if (updates.Category != null && updates.Category != existingTask.Category)
+                existingTask.Category = updates.Category;
 
             await _context.SaveChangesAsync();
             return Ok(existingTask);

@@ -17,6 +17,7 @@ namespace TRT_backend.Data
         public DbSet<Claims> Claims { get; set; }
         public DbSet<UserClaim> UserClaims { get; set; }
         public DbSet<RoleClaim> RoleClaims { get; set; }
+        public DbSet<Message> Messages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -79,6 +80,19 @@ modelBuilder.Entity<Message>()
                 .HasOne(rc => rc.Claim)
                 .WithMany(c => c.RoleClaims)
                 .HasForeignKey(rc => rc.ClaimId);
+
+            // Message ilişkileri
+            modelBuilder.Entity<Message>()
+                .HasOne(m => m.FromUser)
+                .WithMany()
+                .HasForeignKey(m => m.FromUserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<Message>()
+                .HasOne(m => m.ToUser)
+                .WithMany()
+                .HasForeignKey(m => m.ToUserId)
+                .OnDelete(DeleteBehavior.NoAction);
 
             modelBuilder.Entity<Claims>().HasData(
                 new Claims { Id = 1, ClaimName = "Add Task" },
