@@ -6,17 +6,43 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using TRT_backend.Hubs;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Add services to the container
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+    });
 
-builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+
+ builder.Services.AddCors(options =>
+{
+    
+    //emre main comp test server 
+    /* options.AddPolicy("CorsPolicy", builder =>
+   {
+       builder.WithOrigins("http://127.0.0.1:5500", "http://127.0.0.1:5501") // frontend adresleri
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();  // Çok önemli, SignalR için gerekli
+   });  */
+
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins("http://localhost:3000") // Frontend adresin
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });  
+
+});
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Todo API", Version = "v1" });
+
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         In = ParameterLocation.Header,
@@ -25,6 +51,7 @@ builder.Services.AddSwaggerGen(c =>
         Type = SecuritySchemeType.ApiKey,
         Scheme = "Bearer"
     });
+
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
@@ -40,29 +67,11 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
-builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
-    });
 
-builder.Services.AddSignalR();
-    
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-builder.Services.AddCors(options =>
-  {
-      options.AddPolicy("AllowAll", builder =>
-      {
-          builder.AllowAnyOrigin()
-                 .AllowAnyMethod()
-                 .AllowAnyHeader();
-      });
-  });
 
-
-// Configure the HTTP request pipeline.
-
+builder.Services.AddSignalR();
 
 builder.Services.AddAuthentication(options =>
 {
@@ -85,28 +94,44 @@ builder.Services.AddAuthentication(options =>
 
 var app = builder.Build();
 
+// Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI(); /*(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Todo API V1");
-        c.RoutePrefix = "swagger";
-    }); */
+    app.UseSwaggerUI();
 }
-app.UseAuthentication();
-app.UseAuthorization();
 
 app.UseHttpsRedirection();
 
-app.UseCors("AllowAll");
+// CORS'u doğru policy ile kullan
+//app.UseCors();
+
+app.UseCors("CorsPolicy");
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers();
-
-// Add this using directive at the top of your file:
-
-
-// Then map the hub as follows:
 app.MapHub<ChatHub>("/chathub");
+
+// 24 saatte bir eski mesajları temizleme task
+app.Lifetime.ApplicationStarted.Register(() =>
+{
+    Task.Run(async () =>
+    {
+        using var scope = app.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        while (true)
+        {
+            var silinecekler = db.Messages
+                .Where(m => m.CreatedAt < DateTime.UtcNow.AddHours(-24));
+            db.Messages.RemoveRange(silinecekler);
+            await db.SaveChangesAsync();
+
+            await Task.Delay(TimeSpan.FromHours(24));
+        }
+    });
+});
 
 app.Run();

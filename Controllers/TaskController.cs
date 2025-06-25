@@ -67,24 +67,49 @@ namespace TRT_backend.Controllers
             return Ok(result);
         }
 
-        [HttpGet]
-        public IActionResult GetTasks(int pageNumber = 1, int pageSize = 2)
-        {
-            var pagedTasks = _context.Tasks
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
-            .ToList();
+       [HttpGet]
+       public IActionResult GetTasks(int userId, int pageNumber = 1, int pageSize = 2)
+       {
+           var user = _context.Users
+               .Include(u => u.UserRoles)
+                   .ThenInclude(ur => ur.Role)
+               .FirstOrDefault(u => u.Id == userId);
+       
+           if (user == null)
+               return NotFound("Kullanıcı bulunamadı");
+       
+           IQueryable<TodoTask> query;
+       
+           bool isAdmin = user.UserRoles.Any(ur => ur.Role.RoleName == "Admin");
+       
+           if (isAdmin)
+           {
+               query = _context.Tasks.AsQueryable();
+           }
+           else
+           {
+               query = _context.Assignees
+                   .Where(a => a.UserId == userId)
+                   .Include(a => a.Task)
+                   .Select(a => a.Task);
+           }
+       
+           var totalCount = query.Count();
+       
+           var pagedTasks = query
+               .Skip((pageNumber - 1) * pageSize)
+               .Take(pageSize)
+               .ToList();
+       
+           return Ok(new
+           {
+               Data = pagedTasks,
+               TotalCount = totalCount,
+               PageNumber = pageNumber,
+               PageSize = pageSize
+           });
+       }
 
-            var totalCount = _context.Tasks.Count();
-
-            return Ok(new
-          {
-            Data = pagedTasks,
-            TotalCount = totalCount,
-            PageNumber = pageNumber,
-            PageSize = pageSize
-          });
-        }
 
 
         [HttpDelete]

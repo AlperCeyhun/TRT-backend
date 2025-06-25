@@ -7,6 +7,8 @@ namespace TRT_backend.Data
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
+        public DbSet<Message> Messages { get; set; }
+
         public DbSet<TodoTask> Tasks { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<Assignee> Assignees {get; set; }
@@ -18,6 +20,20 @@ namespace TRT_backend.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+
+            modelBuilder.Entity<Message>()
+    .HasOne(m => m.FromUser)
+    .WithMany()
+    .HasForeignKey(m => m.FromUserId)
+    .OnDelete(DeleteBehavior.Restrict);
+
+modelBuilder.Entity<Message>()
+    .HasOne(m => m.ToUser)
+    .WithMany()
+    .HasForeignKey(m => m.ToUserId)
+    .OnDelete(DeleteBehavior.Restrict); 
+
+    
             modelBuilder.Entity<TodoTask>()
                 .Property(e => e.Category)
                 .HasConversion<string>();
