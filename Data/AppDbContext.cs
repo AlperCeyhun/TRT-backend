@@ -116,6 +116,14 @@ modelBuilder.Entity<Message>()
                 new RoleClaim { Id = 6, RoleId = 1, ClaimId = 6 }  // Edit Task Assignees
             );
 
+            modelBuilder.Entity<User>().HasData(
+                new User { Id = 1, username = "admin", password = "admin123" }
+            );
+
+            modelBuilder.Entity<UserRole>().HasData(
+                new UserRole { Id = 1, UserId = 1, RoleId = 1 }
+            );
+
         
         }
     }
