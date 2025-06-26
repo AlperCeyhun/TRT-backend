@@ -68,15 +68,19 @@ namespace TRT_backend.Controllers
         }
 
        [HttpGet]
-       public IActionResult GetTasks(int userId, int pageNumber = 1, int pageSize = 2)
+       public IActionResult GetTasks(int pageNumber = 1, int pageSize = 2)
        {
+           int userId = GetUserIdFromToken();
+           if (userId == 0)
+               return Unauthorized("Token is invalid.");
+               
            var user = _context.Users
                .Include(u => u.UserRoles)
                    .ThenInclude(ur => ur.Role)
                .FirstOrDefault(u => u.Id == userId);
        
            if (user == null)
-               return NotFound("Kullanıcı bulunamadı");
+               return NotFound("User not found.");
        
            IQueryable<TodoTask> query;
        
