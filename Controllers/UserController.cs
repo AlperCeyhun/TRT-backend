@@ -110,49 +110,6 @@ namespace TRT_backend.Controllers
             return Ok(new { token = tokenString, roleIds = user.UserRoles.Select(ur => ur.RoleId).ToList() });
         }
 
-        
-        [HttpPost("assign-role")]
-        
-        public async Task<IActionResult> AssignRole([FromBody] AssignRoleDto dto)
-        {
-            int userId = GetUserIdFromToken();
-            bool isAdmin = _context.UserRoles.Any(ur => ur.UserId == userId && ur.Role.RoleName == "Admin");
-            if (!isAdmin)
-                return StatusCode(403, "Only admins can assign roles to users.");
-
-            var user = await _context.Users.FindAsync(dto.UserId);
-            var role = await _context.Roles.FindAsync(dto.RoleId);
-            if (user == null || role == null)
-                return NotFound("User or Role not found.");
-
-            bool alreadyHas = await _context.UserRoles.AnyAsync(ur => ur.UserId == dto.UserId && ur.RoleId == dto.RoleId);
-            if (alreadyHas)
-                return BadRequest("User already has this role.");
-
-            _context.UserRoles.Add(new UserRole { UserId = dto.UserId, RoleId = dto.RoleId });
-            await _context.SaveChangesAsync();
-            return Ok("Role assigned to user.");
-        }
-
-        
-        [HttpPost("remove-role")]
-        
-        public async Task<IActionResult> RemoveRole([FromBody] AssignRoleDto dto)
-        {
-            int userId = GetUserIdFromToken();
-            bool isAdmin = _context.UserRoles.Any(ur => ur.UserId == userId && ur.Role.RoleName == "Admin");
-            if (!isAdmin)
-                return StatusCode(403, "Only admins can remove roles from users.");
-
-            var userRole = await _context.UserRoles.FirstOrDefaultAsync(ur => ur.UserId == dto.UserId && ur.RoleId == dto.RoleId);
-            if (userRole == null)
-                return NotFound("User does not have this role.");
-
-            _context.UserRoles.Remove(userRole);
-            await _context.SaveChangesAsync();
-            return Ok("Role removed from user.");
-        }
-
         [HttpPost("assign-claim")]
         public async Task<IActionResult> AssignClaim([FromBody] AssignClaimDto dto)
         {
@@ -207,6 +164,16 @@ namespace TRT_backend.Controllers
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
             return Ok("User deleted successfully.");
+        }
+
+        [HttpGet("user-claims/{userId}")]
+        public IActionResult GetUserClaims(int userId)
+        {
+            var claims = _context.UserClaims
+                .Where(uc => uc.UserId == userId)
+                .Select(uc => new { uc.Claim.Id, uc.Claim.ClaimName })
+                .ToList();
+            return Ok(claims);
         }
 
         [HttpGet("claims")]
