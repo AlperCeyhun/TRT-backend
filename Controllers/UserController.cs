@@ -192,29 +192,6 @@ namespace TRT_backend.Controllers
             return Ok("Claim removed from user.");
         }
 
-        [AllowAnonymous]
-        [HttpGet("my-claims")]
-        public IActionResult GetMyClaims()
-        {
-            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "UserId");
-            if (userIdClaim == null)
-                return Unauthorized();
-            int userId = int.Parse(userIdClaim.Value);
-
-            // Rollerden gelen claimler
-            var roleClaimIds = _context.UserRoles
-                .Where(ur => ur.UserId == userId)
-                .SelectMany(ur => _context.RoleClaims.Where(rc => rc.RoleId == ur.RoleId).Select(rc => rc.ClaimId))
-                .ToList();
-            var roleClaims = _context.Claims.Where(c => roleClaimIds.Contains(c.Id)).Select(c => c.ClaimName);
-
-            // Kullanıcıya özel claimler
-            var userClaimNames = _context.UserClaims.Where(uc => uc.UserId == userId).Select(uc => uc.Claim.ClaimName);
-
-            var allClaims = roleClaims.Concat(userClaimNames).Distinct().ToList();
-            return Ok(allClaims);
-        }
-
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
@@ -230,6 +207,15 @@ namespace TRT_backend.Controllers
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
             return Ok("User deleted successfully.");
+        }
+
+        [HttpGet("claims")]
+        public IActionResult GetAllClaims()
+        {
+            var claims = _context.Claims
+                .Select(c => new { c.Id, c.ClaimName })
+                .ToList();
+            return Ok(claims);
         }
 
         private int GetUserIdFromToken()
