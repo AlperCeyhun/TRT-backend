@@ -59,11 +59,11 @@ namespace TRT_backend.Controllers
         public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {
             var user = await _context.Users
+                .Include(u => u.UserRoles)
+                    .ThenInclude(ur => ur.Role)
+                .Include(u => u.UserClaims)
+                    .ThenInclude(uc => uc.Claim)
                 .Where(u => u.username == dto.username && u.password == dto.password)
-                .Select(u => new {
-                    User = u,
-                    RoleIds = u.UserRoles.Select(ur => ur.RoleId).ToList()
-                })
                 .FirstOrDefaultAsync();
         
             if (user == null)
@@ -72,20 +72,19 @@ namespace TRT_backend.Controllers
             }
 
             // Kullanıcının sahip olduğu tüm claimleri topla
-            var roleClaimIds = _context.UserRoles
-                .Where(ur => ur.UserId == user.User.Id)
+            var roleClaimIds = user.UserRoles
                 .SelectMany(ur => _context.RoleClaims.Where(rc => rc.RoleId == ur.RoleId).Select(rc => rc.ClaimId))
                 .ToList();
             var roleClaims = _context.Claims.Where(c => roleClaimIds.Contains(c.Id)).Select(c => c.ClaimName);
 
-            var userClaimNames = _context.UserClaims.Where(uc => uc.UserId == user.User.Id).Select(uc => uc.Claim.ClaimName);
+            var userClaimNames = user.UserClaims.Select(uc => uc.Claim.ClaimName);
 
             var allClaims = roleClaims.Concat(userClaimNames).Distinct().ToList();
 
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, user.User.username),
-                new Claim("UserId", user.User.Id.ToString())
+                new Claim(ClaimTypes.Name, user.username),
+                new Claim("UserId", user.Id.ToString())
             };
 
             foreach (var claimName in allClaims)
@@ -108,7 +107,7 @@ namespace TRT_backend.Controllers
             var token = tokenHandler.CreateToken(tokenDescriptor);
             var tokenString = tokenHandler.WriteToken(token);
 
-            return Ok(new { token = tokenString, roleIds = user.RoleIds });
+            return Ok(new { token = tokenString, roleIds = user.UserRoles.Select(ur => ur.RoleId).ToList() });
         }
 
         
@@ -241,13 +240,17 @@ namespace TRT_backend.Controllers
 
         private bool HasClaim(int userId, string claimName)
         {
-            var roleClaimIds = _context.UserRoles
+            var allClaims = _context.UserRoles
                 .Where(ur => ur.UserId == userId)
-                .SelectMany(ur => _context.RoleClaims.Where(rc => rc.RoleId == ur.RoleId).Select(rc => rc.ClaimId))
+                .SelectMany(ur => _context.RoleClaims
+                    .Where(rc => rc.RoleId == ur.RoleId)
+                    .Select(rc => rc.Claim.ClaimName))
+                .Concat(_context.UserClaims
+                    .Where(uc => uc.UserId == userId)
+                    .Select(uc => uc.Claim.ClaimName))
+                .Distinct()
                 .ToList();
-            var roleClaims = _context.Claims.Where(c => roleClaimIds.Contains(c.Id)).Select(c => c.ClaimName);
-            var userClaimNames = _context.UserClaims.Where(uc => uc.UserId == userId).Select(uc => uc.Claim.ClaimName);
-            var allClaims = roleClaims.Concat(userClaimNames).Distinct();
+            
             return allClaims.Contains(claimName);
         }
 

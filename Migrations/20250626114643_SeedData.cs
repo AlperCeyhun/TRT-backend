@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -7,7 +8,7 @@
 namespace TRT_backend.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class SeedData : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -121,6 +122,32 @@ namespace TRT_backend.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Messages",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Content = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    FromUserId = table.Column<int>(type: "int", nullable: false),
+                    ToUserId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Messages", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Messages_Users_FromUserId",
+                        column: x => x.FromUserId,
+                        principalTable: "Users",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Messages_Users_ToUserId",
+                        column: x => x.ToUserId,
+                        principalTable: "Users",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
                 name: "UserClaims",
                 columns: table => new
                 {
@@ -178,13 +205,11 @@ namespace TRT_backend.Migrations
                 values: new object[,]
                 {
                     { 1, "Add Task" },
-                    { 2, "Delete User" },
+                    { 2, "Delete Task" },
                     { 3, "Edit Task Title" },
                     { 4, "Edit Task Description" },
                     { 5, "Edit Task Status" },
-                    { 6, "Edit Task Assignees" },
-                    { 7, "Add Claim to User" },
-                    { 8, "Delete Task" }
+                    { 6, "Edit Task Assignees" }
                 });
 
             migrationBuilder.InsertData(
@@ -197,6 +222,11 @@ namespace TRT_backend.Migrations
                 });
 
             migrationBuilder.InsertData(
+                table: "Users",
+                columns: new[] { "Id", "password", "username" },
+                values: new object[] { 1, "admin123", "admin" });
+
+            migrationBuilder.InsertData(
                 table: "RoleClaims",
                 columns: new[] { "Id", "ClaimId", "RoleId" },
                 values: new object[,]
@@ -206,10 +236,13 @@ namespace TRT_backend.Migrations
                     { 3, 3, 1 },
                     { 4, 4, 1 },
                     { 5, 5, 1 },
-                    { 6, 6, 1 },
-                    { 7, 7, 1 },
-                    { 8, 8, 1 }
+                    { 6, 6, 1 }
                 });
+
+            migrationBuilder.InsertData(
+                table: "UserRoles",
+                columns: new[] { "Id", "RoleId", "UserId" },
+                values: new object[] { 1, 1, 1 });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Assignees_TaskId",
@@ -220,6 +253,16 @@ namespace TRT_backend.Migrations
                 name: "IX_Assignees_UserId",
                 table: "Assignees",
                 column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Messages_FromUserId",
+                table: "Messages",
+                column: "FromUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Messages_ToUserId",
+                table: "Messages",
+                column: "ToUserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_RoleClaims_ClaimId",
@@ -257,6 +300,9 @@ namespace TRT_backend.Migrations
         {
             migrationBuilder.DropTable(
                 name: "Assignees");
+
+            migrationBuilder.DropTable(
+                name: "Messages");
 
             migrationBuilder.DropTable(
                 name: "RoleClaims");
