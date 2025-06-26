@@ -118,8 +118,9 @@ namespace TRT_backend.Controllers
         {
             int userId = GetUserIdFromToken();
             bool isAdmin = _context.UserRoles.Any(ur => ur.UserId == userId && ur.Role.RoleName == "Admin");
-            if (!isAdmin && !HasClaim(userId, "Manage Users"))
-                return StatusCode(403, "You are not authorized to perform this operation.");
+            if (!isAdmin)
+                return StatusCode(403, "Only admins can assign roles to users.");
+
             var user = await _context.Users.FindAsync(dto.UserId);
             var role = await _context.Roles.FindAsync(dto.RoleId);
             if (user == null || role == null)
@@ -141,8 +142,9 @@ namespace TRT_backend.Controllers
         {
             int userId = GetUserIdFromToken();
             bool isAdmin = _context.UserRoles.Any(ur => ur.UserId == userId && ur.Role.RoleName == "Admin");
-            if (!isAdmin && !HasClaim(userId, "Manage Users"))
-                return StatusCode(403, "You are not authorized to perform this operation.");
+            if (!isAdmin)
+                return StatusCode(403, "Only admins can remove roles from users.");
+
             var userRole = await _context.UserRoles.FirstOrDefaultAsync(ur => ur.UserId == dto.UserId && ur.RoleId == dto.RoleId);
             if (userRole == null)
                 return NotFound("User does not have this role.");
@@ -157,8 +159,9 @@ namespace TRT_backend.Controllers
         {
             int userId = GetUserIdFromToken();
             bool isAdmin = _context.UserRoles.Any(ur => ur.UserId == userId && ur.Role.RoleName == "Admin");
-            if (!isAdmin && !HasClaim(userId, "Manage Users"))
-                return StatusCode(403, "You are not authorized to perform this operation.");
+            if (!isAdmin)
+                return StatusCode(403, "Only admins can assign claims to users.");
+
             var user = await _context.Users.FindAsync(dto.UserId);
             var claim = await _context.Claims.FindAsync(dto.ClaimId);
             if (user == null || claim == null)
@@ -178,8 +181,9 @@ namespace TRT_backend.Controllers
         {
             int userId = GetUserIdFromToken();
             bool isAdmin = _context.UserRoles.Any(ur => ur.UserId == userId && ur.Role.RoleName == "Admin");
-            if (!isAdmin && !HasClaim(userId, "Manage Users"))
-                return StatusCode(403, "You are not authorized to perform this operation.");
+            if (!isAdmin)
+                return StatusCode(403, "Only admins can remove claims from users.");
+
             var userClaim = await _context.UserClaims.FirstOrDefaultAsync(uc => uc.UserId == dto.UserId && uc.ClaimId == dto.ClaimId);
             if (userClaim == null)
                 return NotFound("User does not have this claim.");
@@ -217,34 +221,16 @@ namespace TRT_backend.Controllers
         {
             int userId = GetUserIdFromToken();
             bool isAdmin = _context.UserRoles.Any(ur => ur.UserId == userId && ur.Role.RoleName == "Admin");
-            if (!isAdmin && !HasClaim(userId, "Delete User"))
-                return StatusCode(403, "You are not authorized to perform this operation.");
+            if (!isAdmin)
+                return StatusCode(403, "Only admins can delete users.");
 
             var user = await _context.Users.FindAsync(id);
             if (user == null)
                 return NotFound("User not found.");
 
-            // Kullanıcıya ait mesajları sil
-            var fromMessages = _context.Messages.Where(m => m.FromUserId == id);
-            _context.Messages.RemoveRange(fromMessages);
-            var toMessages = _context.Messages.Where(m => m.ToUserId == id);
-            _context.Messages.RemoveRange(toMessages);
-
-            // İlişkili tüm kayıtları sil
-            var userRoles = _context.UserRoles.Where(ur => ur.UserId == id);
-            _context.UserRoles.RemoveRange(userRoles);
-
-            var userClaims = _context.UserClaims.Where(uc => uc.UserId == id);
-            _context.UserClaims.RemoveRange(userClaims);
-
-            var assignees = _context.Assignees.Where(a => a.UserId == id);
-            _context.Assignees.RemoveRange(assignees);
-
-            // Gerekirse başka ilişkili tablolar da eklenebilir
-
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
-            return Ok("User and all related data deleted successfully.");
+            return Ok("User deleted successfully.");
         }
 
         private int GetUserIdFromToken()

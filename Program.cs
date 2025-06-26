@@ -17,26 +17,26 @@ builder.Services.AddControllers()
 
 
  builder.Services.AddCors(options =>
-{
-    
-    //emre main comp test server 
-    /* options.AddPolicy("CorsPolicy", builder =>
-   {
-       builder.WithOrigins("http://127.0.0.1:5500", "http://127.0.0.1:5501") // frontend adresleri
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();  // Çok önemli, SignalR için gerekli
-   });  */
-
-    options.AddDefaultPolicy(policy =>
+ {
+     
+     //emre main comp test server 
+     /* options.AddPolicy("CorsPolicy", builder =>
     {
-        policy.WithOrigins("http://localhost:3000") // Frontend adresin
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
-    });  
+        builder.WithOrigins("http://127.0.0.1:5500", "http://127.0.0.1:5501") // frontend adresleri
+               .AllowAnyHeader()
+               .AllowAnyMethod()
+               .AllowCredentials();  // Çok önemli, SignalR için gerekli
+    });  */
 
-});
+    options.AddPolicy("CorsPolicy", policy =>
+     {
+         policy.WithOrigins("http://localhost:3000") // Frontend adresin
+               .AllowAnyHeader()
+               .AllowAnyMethod()
+               .AllowCredentials();
+     });  
+
+ });
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -103,9 +103,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// CORS'u doğru policy ile kullan
-//app.UseCors();
-
+// CORS'u Authentication ve Authorization'dan önce kullan
 app.UseCors("CorsPolicy");
 
 app.UseAuthentication();
