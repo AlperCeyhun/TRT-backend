@@ -84,13 +84,17 @@ namespace TRT_backend.Controllers
        
            if (isAdmin)
            {
-               query = _context.Tasks.AsQueryable();
+               query = _context.Tasks
+                   .Include(t => t.Assignees)
+                       .ThenInclude(a => a.User);
            }
            else
            {
                query = _context.Assignees
                    .Where(a => a.UserId == userId)
                    .Include(a => a.Task)
+                       .ThenInclude(t => t.Assignees)
+                           .ThenInclude(ass => ass.User)
                    .Select(a => a.Task);
            }
        
@@ -99,6 +103,20 @@ namespace TRT_backend.Controllers
            var pagedTasks = query
                .Skip((pageNumber - 1) * pageSize)
                .Take(pageSize)
+               .Select(t => new
+               {
+                   t.Id,
+                   t.Title,
+                   t.Description,
+                   t.Category,
+                   t.Completed,
+                   Assignees = t.Assignees.Select(a => new
+                   {
+                       a.Id,
+                       UserId = a.User.Id,
+                       Username = a.User.username
+                   }).ToList()
+               })
                .ToList();
        
            return Ok(new
