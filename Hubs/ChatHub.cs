@@ -42,7 +42,7 @@ namespace TRT_backend.Hubs
 
             if (fromUser == null || toUser == null)
             {
-                Console.WriteLine($"Kullanıcı bulunamadı → from: {fromUserName}, to: {toUserName}");
+                Console.WriteLine($"User not found → from: {fromUserName}, to: {toUserName}");
                 return;
             }
 
@@ -58,7 +58,7 @@ namespace TRT_backend.Hubs
             // Alıcı bağlıysa mesajı gönder
             if (_connections.TryGetValue(toUser.Id.ToString(), out var receiverConnId))
             {
-                Console.WriteLine($"→ Mesaj gönderiliyor: {toUser.username} ({receiverConnId})");
+                Console.WriteLine($"→ Message sending: {toUser.username} ({receiverConnId})");
                 await Clients.Client(receiverConnId).SendAsync("ReceiveMessage", new
                 {
                     message.Id,
@@ -72,7 +72,7 @@ namespace TRT_backend.Hubs
             }
             else
             {
-                Console.WriteLine($"Alıcı çevrimdışı: {toUser.username}");
+                Console.WriteLine($"Receiver offline: {toUser.username}");
             }
 
             // Göndericiye de mesaj gönderildi onayı
@@ -99,7 +99,7 @@ namespace TRT_backend.Hubs
             if (!string.IsNullOrEmpty(item.Key))
             {
                 _connections.TryRemove(item.Key, out _);
-                Console.WriteLine($"Kullanıcı bağlantısı koptu → userId: {item.Key}");
+                Console.WriteLine($"User disconnected → userId: {item.Key}");
             }
             return base.OnDisconnectedAsync(exception);
         }

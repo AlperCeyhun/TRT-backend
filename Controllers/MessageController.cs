@@ -24,7 +24,7 @@ namespace TRT_backend.Controllers
              var toUser = await _context.Users.FirstOrDefaultAsync(u => u.username == user2Name);
          
              if (fromUser == null || toUser == null)
-                 return NotFound("Kullanıcı bulunamadı");
+                 return NotFound("User not found.");
          
              var messages = await _context.Messages
                  .Include(m => m.FromUser)
