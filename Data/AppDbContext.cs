@@ -8,7 +8,6 @@ namespace TRT_backend.Data
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
         public DbSet<Message> Messages { get; set; }
-
         public DbSet<TodoTask> Tasks { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<Assignee> Assignees {get; set; }
@@ -17,7 +16,7 @@ namespace TRT_backend.Data
         public DbSet<Claims> Claims { get; set; }
         public DbSet<UserClaim> UserClaims { get; set; }
         public DbSet<RoleClaim> RoleClaims { get; set; }
-        public DbSet<Message> Messages { get; set; }
+        
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
