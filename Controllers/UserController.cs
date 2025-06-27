@@ -161,6 +161,28 @@ namespace TRT_backend.Controllers
             if (user == null)
                 return NotFound("User not found.");
 
+            // İlişkili verileri sil
+            var messages = await _context.Messages
+                .Where(m => m.FromUserId == id || m.ToUserId == id)
+                .ToListAsync();
+            _context.Messages.RemoveRange(messages);
+
+            var userClaims = await _context.UserClaims
+                .Where(uc => uc.UserId == id)
+                .ToListAsync();
+            _context.UserClaims.RemoveRange(userClaims);
+
+            var userRoles = await _context.UserRoles
+                .Where(ur => ur.UserId == id)
+                .ToListAsync();
+            _context.UserRoles.RemoveRange(userRoles);
+
+            var assignees = await _context.Assignees
+                .Where(a => a.UserId == id)
+                .ToListAsync();
+            _context.Assignees.RemoveRange(assignees);
+
+            // Kullanıcıyı sil
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
             return Ok("User deleted successfully.");
