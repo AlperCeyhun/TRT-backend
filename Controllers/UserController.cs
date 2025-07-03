@@ -24,6 +24,7 @@ namespace TRT_backend.Controllers
             _config = config;
        } 
 
+        [Tags("UserManagement")]
         [HttpGet]
         public async Task<IActionResult> GetAllUsers()
         {
@@ -36,7 +37,7 @@ namespace TRT_backend.Controllers
                 
             return Ok(users);
         }
-
+        [Tags("UserManagement")]
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto dto)
         {
@@ -55,6 +56,7 @@ namespace TRT_backend.Controllers
             return Ok("Register Succesfull.");
         }
 
+        [Tags("UserManagement")]
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {
@@ -84,7 +86,8 @@ namespace TRT_backend.Controllers
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, user.username),
-                new Claim("UserId", user.Id.ToString())
+                new Claim("UserId", user.Id.ToString()),
+                new Claim("UserRoleId", user.UserRoles.FirstOrDefault()?.RoleId.ToString() ?? "2")
             };
 
             foreach (var claimName in allClaims)
@@ -107,52 +110,10 @@ namespace TRT_backend.Controllers
             var token = tokenHandler.CreateToken(tokenDescriptor);
             var tokenString = tokenHandler.WriteToken(token);
 
-            return Ok(new { token = tokenString, roleIds = user.UserRoles.Select(ur => ur.RoleId).ToList() });
+            return Ok(new { token = tokenString, roleId = user.UserRoles.FirstOrDefault()?.RoleId ?? 2 });
         }
 
-        
-        [HttpPost("assign-role")]
-        
-        public async Task<IActionResult> AssignRole([FromBody] AssignRoleDto dto)
-        {
-            int userId = GetUserIdFromToken();
-            bool isAdmin = _context.UserRoles.Any(ur => ur.UserId == userId && ur.Role.RoleName == "Admin");
-            if (!isAdmin)
-                return StatusCode(403, "Only admins can assign roles to users.");
-
-            var user = await _context.Users.FindAsync(dto.UserId);
-            var role = await _context.Roles.FindAsync(dto.RoleId);
-            if (user == null || role == null)
-                return NotFound("User or Role not found.");
-
-            bool alreadyHas = await _context.UserRoles.AnyAsync(ur => ur.UserId == dto.UserId && ur.RoleId == dto.RoleId);
-            if (alreadyHas)
-                return BadRequest("User already has this role.");
-
-            _context.UserRoles.Add(new UserRole { UserId = dto.UserId, RoleId = dto.RoleId });
-            await _context.SaveChangesAsync();
-            return Ok("Role assigned to user.");
-        }
-
-        
-        [HttpPost("remove-role")]
-        
-        public async Task<IActionResult> RemoveRole([FromBody] AssignRoleDto dto)
-        {
-            int userId = GetUserIdFromToken();
-            bool isAdmin = _context.UserRoles.Any(ur => ur.UserId == userId && ur.Role.RoleName == "Admin");
-            if (!isAdmin)
-                return StatusCode(403, "Only admins can remove roles from users.");
-
-            var userRole = await _context.UserRoles.FirstOrDefaultAsync(ur => ur.UserId == dto.UserId && ur.RoleId == dto.RoleId);
-            if (userRole == null)
-                return NotFound("User does not have this role.");
-
-            _context.UserRoles.Remove(userRole);
-            await _context.SaveChangesAsync();
-            return Ok("Role removed from user.");
-        }
-
+        [Tags("ClaimManagement")]
         [HttpPost("assign-claim")]
         public async Task<IActionResult> AssignClaim([FromBody] AssignClaimDto dto)
         {
@@ -174,7 +135,7 @@ namespace TRT_backend.Controllers
             await _context.SaveChangesAsync();
             return Ok("Claim assigned to user.");
         }
-
+        [Tags("ClaimManagement")]
         [HttpPost("remove-claim")]
         public async Task<IActionResult> RemoveClaim([FromBody] AssignClaimDto dto)
         {
@@ -192,29 +153,7 @@ namespace TRT_backend.Controllers
             return Ok("Claim removed from user.");
         }
 
-        [AllowAnonymous]
-        [HttpGet("my-claims")]
-        public IActionResult GetMyClaims()
-        {
-            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "UserId");
-            if (userIdClaim == null)
-                return Unauthorized();
-            int userId = int.Parse(userIdClaim.Value);
-
-            // Rollerden gelen claimler
-            var roleClaimIds = _context.UserRoles
-                .Where(ur => ur.UserId == userId)
-                .SelectMany(ur => _context.RoleClaims.Where(rc => rc.RoleId == ur.RoleId).Select(rc => rc.ClaimId))
-                .ToList();
-            var roleClaims = _context.Claims.Where(c => roleClaimIds.Contains(c.Id)).Select(c => c.ClaimName);
-
-            // Kullanıcıya özel claimler
-            var userClaimNames = _context.UserClaims.Where(uc => uc.UserId == userId).Select(uc => uc.Claim.ClaimName);
-
-            var allClaims = roleClaims.Concat(userClaimNames).Distinct().ToList();
-            return Ok(allClaims);
-        }
-
+        [Tags("UserManagement")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
@@ -227,9 +166,52 @@ namespace TRT_backend.Controllers
             if (user == null)
                 return NotFound("User not found.");
 
+            // İlişkili verileri sil
+            var messages = await _context.Messages
+                .Where(m => m.FromUserId == id || m.ToUserId == id)
+                .ToListAsync();
+            _context.Messages.RemoveRange(messages);
+
+            var userClaims = await _context.UserClaims
+                .Where(uc => uc.UserId == id)
+                .ToListAsync();
+            _context.UserClaims.RemoveRange(userClaims);
+
+            var userRoles = await _context.UserRoles
+                .Where(ur => ur.UserId == id)
+                .ToListAsync();
+            _context.UserRoles.RemoveRange(userRoles);
+
+            var assignees = await _context.Assignees
+                .Where(a => a.UserId == id)
+                .ToListAsync();
+            _context.Assignees.RemoveRange(assignees);
+
+            // Kullanıcıyı sil
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
             return Ok("User deleted successfully.");
+        }
+
+        [Tags("ClaimManagement")]
+        [HttpGet("user-claims/{userId}")]
+        public IActionResult GetUserClaims(int userId)
+        {
+            var claims = _context.UserClaims
+                .Where(uc => uc.UserId == userId)
+                .Select(uc => new { uc.Claim.Id, uc.Claim.ClaimName })
+                .ToList();
+            return Ok(claims);
+        }
+
+        [Tags("ClaimManagement")]
+        [HttpGet("claims")]
+        public IActionResult GetAllClaims()
+        {
+            var claims = _context.Claims
+                .Select(c => new { c.Id, c.ClaimName })
+                .ToList();
+            return Ok(claims);
         }
 
         private int GetUserIdFromToken()

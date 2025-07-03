@@ -11,19 +11,13 @@ namespace TRT_backend.Models
         public string Title { get; set; }
 
         public string Description { get; set; }
-        public TaskCategory Category { get; set; }
+        public int? CategoryId { get; set; }
+        public Category Category { get; set; }
 
         [Required(ErrorMessage = "It can't be empty.")]
         public bool Completed { get; set; }
 
         
         public ICollection<Assignee> Assignees { get; set; }
-    }
-
-    public enum TaskCategory
-    {
-        Acil,
-        Normal,
-        DusukOncelik
     }
 } 

@@ -18,7 +18,7 @@ namespace TRT_backend.Controllers
             _context = context;
         }
 
-        
+        [Tags("AssigneeManagement")]
         [HttpPost("assign")]
         public async Task<IActionResult> AssignUsersToTask(int taskId, [FromBody] List<int> userIds)
         {
@@ -45,6 +45,7 @@ namespace TRT_backend.Controllers
             return Ok("User(s) assigned successfully.");
         }
 
+        [Tags("AssigneeManagement")]
         [HttpGet("task/{taskId}")]
         public async Task<IActionResult> GetAssigneesForTask(int taskId)
         {
@@ -56,7 +57,7 @@ namespace TRT_backend.Controllers
             return Ok(assignees);
         }
 
-        
+        [Tags("AssigneeManagement")]
         [HttpGet("user/{userId}")]
         public async Task<IActionResult> GetTasksForUser(int userId)
         {
@@ -68,7 +69,7 @@ namespace TRT_backend.Controllers
             return Ok(tasks);
         }
 
-       
+        [Tags("AssigneeManagement")]
         [HttpDelete]
         public async Task<IActionResult> UnassignUserFromTask(int taskId, int userId)
         {
