@@ -34,6 +34,7 @@ namespace TRT_backend.Controllers
             return userIdClaim != null ? int.Parse(userIdClaim.Value) : 0;
         }
 
+        [Tags("TaskManagement")]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateTaskDto dto)
         {
@@ -41,11 +42,16 @@ namespace TRT_backend.Controllers
             if (!HasClaim(userId, "Add Task"))
                 return StatusCode(403, "You dont have permission to add task.");
 
+            var category = await _context.Categories.FindAsync(dto.CategoryId);
+            if (category == null)
+                return BadRequest("Category not found.");
+
             var task = new TodoTask
             {
                 Title = dto.Title,
                 Description = dto.Description,
-                Category = dto.Category,
+                CategoryId = dto.CategoryId,
+                Category = category,
                 Completed = dto.Completed
             };
             _context.Tasks.Add(task);
@@ -54,19 +60,20 @@ namespace TRT_backend.Controllers
             _context.Assignees.Add(new Assignee { TaskId = task.Id, UserId = userId });
             await _context.SaveChangesAsync();
 
-            // Sadece temel alanları içeren bir DTO dön
             var result = new
             {
                 task.Id,
                 task.Title,
                 task.Description,
-                task.Category,
+                task.CategoryId,
+                CategoryName = category.Name,
                 task.Completed
             };
 
             return Ok(result);
         }
 
+       [Tags("TaskManagement")]
        [HttpGet]
        public IActionResult GetTasks(int pageNumber = 1, int pageSize = 2)
        {
@@ -112,7 +119,8 @@ namespace TRT_backend.Controllers
                    t.Id,
                    t.Title,
                    t.Description,
-                   t.Category,
+                   t.CategoryId,
+                   CategoryName = t.Category.Name,
                    t.Completed,
                    Assignees = t.Assignees.Select(a => new
                    {
@@ -132,8 +140,7 @@ namespace TRT_backend.Controllers
            });
        }
 
-
-
+        [Tags("TaskManagement")]
         [HttpDelete]
         [Route("{id}")]
         public async Task<IActionResult> Delete(int id)
@@ -157,23 +164,20 @@ namespace TRT_backend.Controllers
             return Ok();
         }
 
+        [Tags("TaskManagement")]
         [HttpPut]
         [Route("{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] UpdateTaskDto updates)
         {
             int userId = GetUserIdFromToken();
-            
             var existingTask = await _context.Tasks.FindAsync(id);
             if (existingTask == null)
             {
                 return NotFound();
             }
-            
             bool isAdmin = _context.UserRoles.Any(ur => ur.UserId == userId && ur.Role.RoleName == "Admin");
             if (!isAdmin && !_context.Assignees.Any(a => a.TaskId == id && a.UserId == userId))
                 return StatusCode(403, "You can only update the task you are assigned to.");
-
-            // Sadece admin olmayanlar için, sadece değişen alanlarda claim kontrolü
             if (!isAdmin) {
                 if (updates.Title != null && updates.Title != existingTask.Title && !HasClaim(userId, "Edit Task Title"))
                     return StatusCode(403, "You don't have permission to edit task title.");
@@ -181,20 +185,23 @@ namespace TRT_backend.Controllers
                     return StatusCode(403, "You don't have permission to edit task description.");
                 if (updates.Completed != null && updates.Completed != existingTask.Completed && !HasClaim(userId, "Edit Task Status"))
                     return StatusCode(403, "You don't have permission to edit task status.");
-                if (updates.Category != null && updates.Category != existingTask.Category && !HasClaim(userId, "Edit Task Assignees"))
+                if (updates.CategoryId != null && updates.CategoryId != existingTask.CategoryId && !HasClaim(userId, "Edit Task Assignees"))
                     return StatusCode(403, "You don't have permission to edit task category.");
             }
-
-            // Sadece izin verilen ve değişen alanları güncelle
             if (updates.Title != null && updates.Title != existingTask.Title)
                 existingTask.Title = updates.Title;
             if (updates.Description != null && updates.Description != existingTask.Description)
                 existingTask.Description = updates.Description;
             if (updates.Completed != null && updates.Completed != existingTask.Completed)
-                existingTask.Completed = updates.Completed;
-            if (updates.Category != null && updates.Category != existingTask.Category)
-                existingTask.Category = updates.Category;
-
+                existingTask.Completed = updates.Completed.Value;
+            if (updates.CategoryId != null && updates.CategoryId != existingTask.CategoryId)
+            {
+                var category = await _context.Categories.FindAsync(updates.CategoryId);
+                if (category == null)
+                    return BadRequest("Category not found.");
+                existingTask.CategoryId = updates.CategoryId.Value;
+                existingTask.Category = category;
+            }
             await _context.SaveChangesAsync();
             return Ok(existingTask);
         }
@@ -203,15 +210,15 @@ namespace TRT_backend.Controllers
         {
             public string Title { get; set; }
             public string Description { get; set; }
-            public TaskCategory Category { get; set; }
-            public bool Completed { get; set; }
+            public int? CategoryId { get; set; }
+            public bool? Completed { get; set; }
         }
 
         public class CreateTaskDto
         {
             public string Title { get; set; }
             public string Description { get; set; }
-            public TaskCategory Category { get; set; }
+            public int CategoryId { get; set; }
             public bool Completed { get; set; }
         }
     }

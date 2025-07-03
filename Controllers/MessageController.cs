@@ -16,7 +16,7 @@ namespace TRT_backend.Controllers
             _context = context;
         }
 
-        
+        [Tags("MessageManagement")]
         [HttpGet("{user1Name}/{user2Name}")]
          public async Task<IActionResult> GetMessages(string user1Name, string user2Name)
          {

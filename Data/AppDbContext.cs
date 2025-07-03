@@ -16,6 +16,9 @@ namespace TRT_backend.Data
         public DbSet<Claims> Claims { get; set; }
         public DbSet<UserClaim> UserClaims { get; set; }
         public DbSet<RoleClaim> RoleClaims { get; set; }
+        public DbSet<Category> Categories { get; set; }
+        public DbSet<ClaimLanguage> ClaimLanguages { get; set; }
+        public DbSet<AppLanguage> AppLanguages { get; set; }
         
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -34,10 +37,6 @@ modelBuilder.Entity<Message>()
     .OnDelete(DeleteBehavior.Restrict); 
 
     
-            modelBuilder.Entity<TodoTask>()
-                .Property(e => e.Category)
-                .HasConversion<string>();
-
             // Assignee ile User ilişkisi
             modelBuilder.Entity<Assignee>()
                 .HasOne(a => a.User)
@@ -94,12 +93,12 @@ modelBuilder.Entity<Message>()
                 .OnDelete(DeleteBehavior.NoAction);
 
             modelBuilder.Entity<Claims>().HasData(
-                new Claims { Id = 1, ClaimName = "Add Task" },
-                new Claims { Id = 2, ClaimName = "Delete Task" },
-                new Claims { Id = 3, ClaimName = "Edit Task Title" },
-                new Claims { Id = 4, ClaimName = "Edit Task Description" },
-                new Claims { Id = 5, ClaimName = "Edit Task Status" },
-                new Claims { Id = 6, ClaimName = "Edit Task Assignees" }
+                new Claims { Id = 1, ClaimName = "AddTask" },
+                new Claims { Id = 2, ClaimName = "DeleteTask" },
+                new Claims { Id = 3, ClaimName = "EditTaskTitle" },
+                new Claims { Id = 4, ClaimName = "EditTaskDescription" },
+                new Claims { Id = 5, ClaimName = "EditTaskStatus" },
+                new Claims { Id = 6, ClaimName = "EditTaskAssignees" }
             );
 
             modelBuilder.Entity<Role>().HasData(

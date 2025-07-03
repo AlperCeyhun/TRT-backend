@@ -12,8 +12,8 @@ using TRT_backend.Data;
 namespace TRT_backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250626114643_SeedData")]
-    partial class SeedData
+    [Migration("20250703090236_AddAppLanguageForeignKeyToClaimLanguage")]
+    partial class AddAppLanguageForeignKeyToClaimLanguage
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,6 +24,42 @@ namespace TRT_backend.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("TRT_backend.Models.AppLanguage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("LanguageId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AppLanguages");
+                });
 
             modelBuilder.Entity("TRT_backend.Models.Assignee", b =>
                 {
@@ -48,6 +84,65 @@ namespace TRT_backend.Migrations
                     b.ToTable("Assignees");
                 });
 
+            modelBuilder.Entity("TRT_backend.Models.Category", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Categories");
+                });
+
+            modelBuilder.Entity("TRT_backend.Models.ClaimLanguage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AppLanguageId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ClaimId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AppLanguageId");
+
+                    b.HasIndex("ClaimId");
+
+                    b.ToTable("ClaimLanguages");
+                });
+
             modelBuilder.Entity("TRT_backend.Models.Claims", b =>
                 {
                     b.Property<int>("Id")
@@ -68,32 +163,32 @@ namespace TRT_backend.Migrations
                         new
                         {
                             Id = 1,
-                            ClaimName = "Add Task"
+                            ClaimName = "AddTask"
                         },
                         new
                         {
                             Id = 2,
-                            ClaimName = "Delete Task"
+                            ClaimName = "DeleteTask"
                         },
                         new
                         {
                             Id = 3,
-                            ClaimName = "Edit Task Title"
+                            ClaimName = "EditTaskTitle"
                         },
                         new
                         {
                             Id = 4,
-                            ClaimName = "Edit Task Description"
+                            ClaimName = "EditTaskDescription"
                         },
                         new
                         {
                             Id = 5,
-                            ClaimName = "Edit Task Status"
+                            ClaimName = "EditTaskStatus"
                         },
                         new
                         {
                             Id = 6,
-                            ClaimName = "Edit Task Assignees"
+                            ClaimName = "EditTaskAssignees"
                         });
                 });
 
@@ -224,9 +319,8 @@ namespace TRT_backend.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int?>("CategoryId")
+                        .HasColumnType("int");
 
                     b.Property<bool>("Completed")
                         .HasColumnType("bit");
@@ -239,6 +333,8 @@ namespace TRT_backend.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
 
                     b.ToTable("Tasks");
                 });
@@ -345,6 +441,25 @@ namespace TRT_backend.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("TRT_backend.Models.ClaimLanguage", b =>
+                {
+                    b.HasOne("TRT_backend.Models.AppLanguage", "AppLanguage")
+                        .WithMany()
+                        .HasForeignKey("AppLanguageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TRT_backend.Models.Claims", "Claims")
+                        .WithMany()
+                        .HasForeignKey("ClaimId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AppLanguage");
+
+                    b.Navigation("Claims");
+                });
+
             modelBuilder.Entity("TRT_backend.Models.Message", b =>
                 {
                     b.HasOne("TRT_backend.Models.User", "FromUser")
@@ -381,6 +496,15 @@ namespace TRT_backend.Migrations
                     b.Navigation("Claim");
 
                     b.Navigation("Role");
+                });
+
+            modelBuilder.Entity("TRT_backend.Models.TodoTask", b =>
+                {
+                    b.HasOne("TRT_backend.Models.Category", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId");
+
+                    b.Navigation("Category");
                 });
 
             modelBuilder.Entity("TRT_backend.Models.UserClaim", b =>

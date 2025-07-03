@@ -24,6 +24,7 @@ namespace TRT_backend.Controllers
             _config = config;
        } 
 
+        [Tags("UserManagement")]
         [HttpGet]
         public async Task<IActionResult> GetAllUsers()
         {
@@ -36,7 +37,7 @@ namespace TRT_backend.Controllers
                 
             return Ok(users);
         }
-
+        [Tags("UserManagement")]
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto dto)
         {
@@ -55,6 +56,7 @@ namespace TRT_backend.Controllers
             return Ok("Register Succesfull.");
         }
 
+        [Tags("UserManagement")]
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {
@@ -84,7 +86,8 @@ namespace TRT_backend.Controllers
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, user.username),
-                new Claim("UserId", user.Id.ToString())
+                new Claim("UserId", user.Id.ToString()),
+                new Claim("UserRoleId", user.UserRoles.FirstOrDefault()?.RoleId.ToString() ?? "2")
             };
 
             foreach (var claimName in allClaims)
@@ -107,9 +110,10 @@ namespace TRT_backend.Controllers
             var token = tokenHandler.CreateToken(tokenDescriptor);
             var tokenString = tokenHandler.WriteToken(token);
 
-            return Ok(new { token = tokenString, roleIds = user.UserRoles.Select(ur => ur.RoleId).ToList() });
+            return Ok(new { token = tokenString, roleId = user.UserRoles.FirstOrDefault()?.RoleId ?? 2 });
         }
 
+        [Tags("ClaimManagement")]
         [HttpPost("assign-claim")]
         public async Task<IActionResult> AssignClaim([FromBody] AssignClaimDto dto)
         {
@@ -131,7 +135,7 @@ namespace TRT_backend.Controllers
             await _context.SaveChangesAsync();
             return Ok("Claim assigned to user.");
         }
-
+        [Tags("ClaimManagement")]
         [HttpPost("remove-claim")]
         public async Task<IActionResult> RemoveClaim([FromBody] AssignClaimDto dto)
         {
@@ -149,6 +153,7 @@ namespace TRT_backend.Controllers
             return Ok("Claim removed from user.");
         }
 
+        [Tags("UserManagement")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
@@ -166,6 +171,7 @@ namespace TRT_backend.Controllers
             return Ok("User deleted successfully.");
         }
 
+        [Tags("ClaimManagement")]
         [HttpGet("user-claims/{userId}")]
         public IActionResult GetUserClaims(int userId)
         {
@@ -176,6 +182,7 @@ namespace TRT_backend.Controllers
             return Ok(claims);
         }
 
+        [Tags("ClaimManagement")]
         [HttpGet("claims")]
         public IActionResult GetAllClaims()
         {
