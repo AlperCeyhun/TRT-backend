@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TRT_backend.Data;
 
@@ -11,9 +12,11 @@ using TRT_backend.Data;
 namespace TRT_backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250630083731_RemoveTaskCategoryEnum")]
+    partial class RemoveTaskCategoryEnum
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -43,36 +46,6 @@ namespace TRT_backend.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Assignees");
-                });
-
-            modelBuilder.Entity("TRT_backend.Models.ClaimLanguage", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("ClaimId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("LanguageId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ClaimId");
-
-                    b.HasIndex("LanguageId");
-
-                    b.ToTable("ClaimLanguages");
                 });
 
             modelBuilder.Entity("TRT_backend.Models.Claims", b =>
@@ -122,27 +95,6 @@ namespace TRT_backend.Migrations
                             Id = 6,
                             ClaimName = "EditTaskAssignees"
                         });
-                });
-
-            modelBuilder.Entity("TRT_backend.Models.Language", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Languages");
                 });
 
             modelBuilder.Entity("TRT_backend.Models.Message", b =>
@@ -264,6 +216,22 @@ namespace TRT_backend.Migrations
                         });
                 });
 
+            modelBuilder.Entity("TRT_backend.Models.TaskCategory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("TaskCategories");
+                });
+
             modelBuilder.Entity("TRT_backend.Models.TodoTask", b =>
                 {
                     b.Property<int>("Id")
@@ -278,11 +246,16 @@ namespace TRT_backend.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("TaskCategoryId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TaskCategoryId");
 
                     b.ToTable("Tasks");
                 });
@@ -389,25 +362,6 @@ namespace TRT_backend.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("TRT_backend.Models.ClaimLanguage", b =>
-                {
-                    b.HasOne("TRT_backend.Models.Claims", "Claim")
-                        .WithMany()
-                        .HasForeignKey("ClaimId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("TRT_backend.Models.Language", "Language")
-                        .WithMany()
-                        .HasForeignKey("LanguageId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Claim");
-
-                    b.Navigation("Language");
-                });
-
             modelBuilder.Entity("TRT_backend.Models.Message", b =>
                 {
                     b.HasOne("TRT_backend.Models.User", "FromUser")
@@ -444,6 +398,15 @@ namespace TRT_backend.Migrations
                     b.Navigation("Claim");
 
                     b.Navigation("Role");
+                });
+
+            modelBuilder.Entity("TRT_backend.Models.TodoTask", b =>
+                {
+                    b.HasOne("TRT_backend.Models.TaskCategory", "TaskCategory")
+                        .WithMany()
+                        .HasForeignKey("TaskCategoryId");
+
+                    b.Navigation("TaskCategory");
                 });
 
             modelBuilder.Entity("TRT_backend.Models.UserClaim", b =>

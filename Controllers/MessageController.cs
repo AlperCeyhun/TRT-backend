@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TRT_backend.Data;
 using TRT_backend.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace TRT_backend.Controllers
 {
@@ -16,7 +17,7 @@ namespace TRT_backend.Controllers
             _context = context;
         }
 
-        
+        [Tags("MessageManagement")]
         [HttpGet("{user1Name}/{user2Name}")]
          public async Task<IActionResult> GetMessages(string user1Name, string user2Name)
          {

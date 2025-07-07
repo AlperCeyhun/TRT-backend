@@ -1,10 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 using TRT_backend.Data;
-using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using TRT_backend.Hubs;
+using Microsoft.OpenApi.Models;
+using Scalar.AspNetCore;
+using TRT_backend.Services;
+using TRT_backend.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,34 +42,20 @@ builder.Services.AddControllers()
  });
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
-{
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Todo API", Version = "v1" });
+builder.Services.AddOpenApi();
 
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        In = ParameterLocation.Header,
-        Description = "Lütfen 'Bearer <token>' şeklinde girin.",
-        Name = "Authorization",
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer"
-    });
+// Service registrations
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<ITaskService, TaskService>();
+builder.Services.AddScoped<IAssigneeService, AssigneeService>();
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<ICacheService, MemoryCacheService>();
 
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            new string[] {}
-        }
-    });
-});
+// Repository registrations
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<ITaskRepository, TaskRepository>();
+builder.Services.AddScoped<IAssigneeRepository, AssigneeRepository>();
+builder.Services.AddScoped<ITaskCategoryRepository, TaskCategoryRepository>();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"), 
@@ -104,17 +93,18 @@ var app = builder.Build();
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    // OpenAPI endpoint'i aktif et
 }
 
 app.UseHttpsRedirection();
 
 // CORS'u Authentication ve Authorization'dan önce kullan
 app.UseCors("CorsPolicy");
-
+app.MapOpenApi();
+app.MapScalarApiReference();
 app.UseAuthentication();
 app.UseAuthorization();
+
 
 app.MapControllers();
 app.MapHub<ChatHub>("/chathub");
@@ -139,4 +129,6 @@ app.Lifetime.ApplicationStarted.Register(() =>
     });
 });
 
+
 app.Run();
+

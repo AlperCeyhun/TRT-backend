@@ -1,85 +1,89 @@
 using Microsoft.AspNetCore.Mvc;
-using TRT_backend.Data;
+using TRT_backend.Services;
 using TRT_backend.Models;
-using System.Linq;
-using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace TRT_backend.Controllers
 {
     [ApiController]
     [Route("api/assignees")]
+    [Authorize]
     public class AssigneeController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly IAssigneeService _assigneeService;
+        private readonly IUserService _userService;
 
-        public AssigneeController(AppDbContext context)
+        public AssigneeController(IAssigneeService assigneeService, IUserService userService)
         {
-            _context = context;
+            _assigneeService = assigneeService;
+            _userService = userService;
         }
 
-        
+        [Tags("AssigneeManagement")]
         [HttpPost("assign")]
         public async Task<IActionResult> AssignUsersToTask(int taskId, [FromBody] List<int> userIds)
         {
-            var task = await _context.Tasks.FindAsync(taskId);
-            if (task == null)
-                return NotFound("Task not found.");
+           
+            if (!_userService.IsUserAdminFromToken(User))
+                return StatusCode(403, "Only admins can assign users to tasks.");
 
-            foreach (var userId in userIds)
-            {
-                if (!await _context.Users.AnyAsync(u => u.Id == userId))
-                    return NotFound($"User not found: {userId}");
+            var success = await _assigneeService.AssignUsersToTaskAsync(taskId, userIds);
+            if (!success)
+                return NotFound("Task or user not found.");
 
-                if (!await _context.Assignees.AnyAsync(a => a.TaskId == taskId && a.UserId == userId))
-                {
-                    var assignee = new Assignee
-                    {
-                        TaskId = taskId,
-                        UserId = userId
-                    };
-                    _context.Assignees.Add(assignee);
-                }
-            }
-            await _context.SaveChangesAsync();
             return Ok("User(s) assigned successfully.");
         }
 
+        [Tags("AssigneeManagement")]
         [HttpGet("task/{taskId}")]
         public async Task<IActionResult> GetAssigneesForTask(int taskId)
         {
-            var assignees = await _context.Assignees
-                .Where(a => a.TaskId == taskId)
-                .Select(a => new { a.UserId, a.User.username })
-                .ToListAsync();
-
-            return Ok(assignees);
+            var assignees = await _assigneeService.GetAssigneesForTaskAsync(User, taskId);
+            return Ok(assignees.Select(a => new {
+                a.Id,
+                UserId = a.User.Id,
+                Username = a.User.username
+            }));
         }
 
-        
+        [Tags("AssigneeManagement")]
         [HttpGet("user/{userId}")]
         public async Task<IActionResult> GetTasksForUser(int userId)
         {
-            var tasks = await _context.Assignees
-                .Where(a => a.UserId == userId)
-                .Select(a => new { a.TaskId, a.Task.Title, a.Task.Description })
-                .ToListAsync();
+            var currentUserId = _userService.GetUserIdFromToken(User);
+            
+            
+            if (!_userService.IsUserAdminFromToken(User) && currentUserId != userId)
+                return StatusCode(403, "You can only view your own tasks.");
 
-            return Ok(tasks);
+            var tasks = await _assigneeService.GetTasksForUserAsync(User);
+            return Ok(tasks.Select(t => new {
+                t.Id,
+                t.Title,
+                t.Description,
+                t.Completed,
+                Assignees = t.Assignees.Select(a => new {
+                    a.Id,
+                    UserId = a.User.Id,
+                    Username = a.User.username
+                }).ToList()
+            }));
         }
 
-       
+        [Tags("AssigneeManagement")]
         [HttpDelete]
         public async Task<IActionResult> UnassignUserFromTask(int taskId, int userId)
         {
-            var assignee = await _context.Assignees.FirstOrDefaultAsync(a => a.TaskId == taskId && a.UserId == userId);
-            if (assignee == null)
-            {
-                return NotFound("No such task was found assigned to this user.");
-            }
+            var currentUserId = _userService.GetUserIdFromToken(User);
+            
+            
+            if (!_userService.IsUserAdminFromToken(User) && currentUserId != userId)
+                return StatusCode(403, "You can only unassign yourself from tasks.");
 
-            _context.Assignees.Remove(assignee);
-            await _context.SaveChangesAsync();
+            var success = await _assigneeService.UnassignUserFromTaskAsync(taskId, userId);
+            if (!success)
+                return NotFound("No such task was found assigned to this user.");
+
             return Ok("User's task assignment was removed successfully.");
         }
     }

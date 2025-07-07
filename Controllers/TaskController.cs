@@ -1,218 +1,243 @@
 using Microsoft.AspNetCore.Mvc;
-using TRT_backend.Data;
+using TRT_backend.Services;
 using TRT_backend.Models;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
+using TRT_backend.Models.DTO;
+using TRT_backend.Repositories;
 
 namespace TRT_backend.Controllers
 {
     [ApiController]
     [Route("api/todo-tasks")]
+    [Authorize]
     public class TaskController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly ITaskService _taskService;
+        private readonly IUserService _userService;
+        private readonly ITaskCategoryRepository _taskCategoryRepository;
 
-        public TaskController(AppDbContext context)
+        public TaskController(ITaskService taskService, IUserService userService, ITaskCategoryRepository taskCategoryRepository)
         {
-            _context = context;
+            _taskService = taskService;
+            _userService = userService;
+            _taskCategoryRepository = taskCategoryRepository;
         }
 
-        private bool HasClaim(int userId, string claimName)
-        {
-            var roleClaimIds = _context.UserRoles
-                .Where(ur => ur.UserId == userId)
-                .SelectMany(ur => _context.RoleClaims.Where(rc => rc.RoleId == ur.RoleId).Select(rc => rc.ClaimId))
-                .ToList();
-            var roleClaims = _context.Claims.Where(c => roleClaimIds.Contains(c.Id)).Select(c => c.ClaimName);
-            var userClaimNames = _context.UserClaims.Where(uc => uc.UserId == userId).Select(uc => uc.Claim.ClaimName);
-            var allClaims = roleClaims.Concat(userClaimNames).Distinct();
-            return allClaims.Contains(claimName);
-        }
-
-        private int GetUserIdFromToken()
-        {
-            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "UserId");
-            return userIdClaim != null ? int.Parse(userIdClaim.Value) : 0;
-        }
-
+        [Tags("TaskManagement")]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateTaskDto dto)
         {
-            int userId = GetUserIdFromToken();
-            if (!HasClaim(userId, "Add Task"))
-                return StatusCode(403, "You dont have permission to add task.");
+            var userId = _userService.GetUserIdFromToken(User);
+            
+            if (!_userService.HasUserPermissionFromToken(User, "Add Task"))
+                return StatusCode(403, "You don't have permission to add task.");
+
+            // Kategori kontrolü
+            if (dto.CategoryId.HasValue)
+            {
+                var category = await _taskCategoryRepository.GetByIdAsync(dto.CategoryId.Value);
+                if (category == null)
+                    return BadRequest("Geçersiz kategori ID");
+            }
 
             var task = new TodoTask
             {
                 Title = dto.Title,
                 Description = dto.Description,
-                Category = dto.Category,
-                Completed = dto.Completed
+                Completed = dto.Completed,
+                CategoryId = dto.CategoryId
             };
-            _context.Tasks.Add(task);
-            await _context.SaveChangesAsync();
 
-            _context.Assignees.Add(new Assignee { TaskId = task.Id, UserId = userId });
-            await _context.SaveChangesAsync();
+            var createdTask = await _taskService.CreateTaskAsync(task);
 
-            // Sadece temel alanları içeren bir DTO dön
+           
+            await _taskService.AssignUserToTaskAsync(createdTask.Id, userId);
+
             var result = new
             {
-                task.Id,
-                task.Title,
-                task.Description,
-                task.Category,
-                task.Completed
+                createdTask.Id,
+                createdTask.Title,
+                createdTask.Description,
+                createdTask.Completed
             };
 
             return Ok(result);
         }
 
-       [HttpGet]
-       public IActionResult GetTasks(int pageNumber = 1, int pageSize = 2)
-       {
-           int userId = GetUserIdFromToken();
-           if (userId == 0)
-               return Unauthorized("Token is invalid.");
-               
-           var user = _context.Users
-               .Include(u => u.UserRoles)
-                   .ThenInclude(ur => ur.Role)
-               .FirstOrDefault(u => u.Id == userId);
-       
-           if (user == null)
-               return NotFound("User not found.");
-       
-           IQueryable<TodoTask> query;
-       
-           bool isAdmin = user.UserRoles.Any(ur => ur.Role.RoleName == "Admin");
-       
-           if (isAdmin)
-           {
-               query = _context.Tasks
-                   .Include(t => t.Assignees)
-                       .ThenInclude(a => a.User);
-           }
-           else
-           {
-               query = _context.Assignees
-                   .Where(a => a.UserId == userId)
-                   .Include(a => a.Task)
-                       .ThenInclude(t => t.Assignees)
-                           .ThenInclude(ass => ass.User)
-                   .Select(a => a.Task);
-           }
-       
-           var totalCount = query.Count();
-       
-           var pagedTasks = query
-               .Skip((pageNumber - 1) * pageSize)
-               .Take(pageSize)
-               .Select(t => new
-               {
-                   t.Id,
-                   t.Title,
-                   t.Description,
-                   t.Category,
-                   t.Completed,
-                   Assignees = t.Assignees.Select(a => new
-                   {
-                       a.Id,
-                       UserId = a.User.Id,
-                       Username = a.User.username
-                   }).ToList()
-               })
-               .ToList();
-       
-           return Ok(new
-           {
-               Data = pagedTasks,
-               TotalCount = totalCount,
-               PageNumber = pageNumber,
-               PageSize = pageSize
-           });
-       }
+        [Tags("TaskManagement")]
+        [HttpGet]
+        public async Task<IActionResult> GetTasks(int pageNumber = 1, int pageSize = 2)
+        {
+            
+            if (_userService.CanViewAllTasksFromToken(User))
+            {
+                var allTasks = await _taskService.GetAllTasksAsync();
+                var pagedTasks = allTasks
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
+                    .Select(t => new
+                    {
+                        t.Id,
+                        t.Title,
+                        t.Description,
+                        t.Completed,
+                        Category = t.Category != null ? new
+                        {
+                            t.Category.Id,
+                            t.Category.Name,
+                            t.Category.Color
+                        } : null,
+                        Assignees = t.Assignees.Select(a => new
+                        {
+                            a.Id,
+                            UserId = a.User.Id,
+                            Username = a.User.username
+                        }).ToList()
+                    }).ToList();
 
+                return Ok(new
+                {
+                    Data = pagedTasks,
+                    TotalCount = allTasks.Count,
+                    PageNumber = pageNumber,
+                    PageSize = pageSize
+                });
+            }
+            else
+            {
+                var tasks = await _taskService.GetTasksForUserAsync(User, pageNumber, pageSize);
+                var totalCount = await _taskService.GetTotalTaskCountAsync(User);
 
+                var pagedTasks = tasks.Select(t => new
+                {
+                    t.Id,
+                    t.Title,
+                    t.Description,
+                    t.Completed,
+                    Category = t.Category != null ? new
+                    {
+                        t.Category.Id,
+                        t.Category.Name,
+                        t.Category.Color
+                    } : null,
+                    Assignees = t.Assignees.Select(a => new
+                    {
+                        a.Id,
+                        UserId = a.User.Id,
+                        Username = a.User.username
+                    }).ToList()
+                }).ToList();
 
-        [HttpDelete]
-        [Route("{id}")]
+                return Ok(new
+                {
+                    Data = pagedTasks,
+                    TotalCount = totalCount,
+                    PageNumber = pageNumber,
+                    PageSize = pageSize
+                });
+            }
+        }
+
+        [Tags("TaskManagement")]
+        [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            int userId = GetUserIdFromToken();
-            if (!HasClaim(userId, "Delete Task"))
+            var userId = _userService.GetUserIdFromToken(User);
+            
+            if (!_userService.HasUserPermissionFromToken(User, "Delete Task"))
                 return StatusCode(403, "You are not authorized to perform this operation.");
 
-            var task = await _context.Tasks.FindAsync(id);
+            var task = await _taskService.GetTaskByIdAsync(id);
             if (task == null)
-            {
                 return NotFound();
-            }
-            
-            bool isAdmin = _context.UserRoles.Any(ur => ur.UserId == userId && ur.Role.RoleName == "Admin");
-            if (!isAdmin && !_context.Assignees.Any(a => a.TaskId == id && a.UserId == userId))
-                return StatusCode(403, "You can only delete the task to which you are assigned.");
 
-            _context.Tasks.Remove(task);
-            await _context.SaveChangesAsync();
+           
+            if (!_userService.IsUserAdminFromToken(User))
+            {
+                var assignedTaskIds = _userService.GetAssignedTaskIdsFromToken(User);
+                if (!assignedTaskIds.Contains(id))
+                    return StatusCode(403, "You can only delete the task to which you are assigned.");
+            }
+
+            var success = await _taskService.DeleteTaskAsync(id);
+            if (!success)
+                return NotFound();
+
             return Ok();
         }
 
-        [HttpPut]
-        [Route("{id}")]
+        [Tags("TaskManagement")]
+        [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] UpdateTaskDto updates)
         {
-            int userId = GetUserIdFromToken();
+            var userId = _userService.GetUserIdFromToken(User);
             
-            var existingTask = await _context.Tasks.FindAsync(id);
+            var existingTask = await _taskService.GetTaskByIdAsync(id);
             if (existingTask == null)
-            {
                 return NotFound();
+
+           
+            if (!_userService.IsUserAdminFromToken(User))
+            {
+                var assignedTaskIds = _userService.GetAssignedTaskIdsFromToken(User);
+                if (!assignedTaskIds.Contains(id))
+                    return StatusCode(403, "You can only update the task you are assigned to.");
             }
+
             
-            bool isAdmin = _context.UserRoles.Any(ur => ur.UserId == userId && ur.Role.RoleName == "Admin");
-            if (!isAdmin && !_context.Assignees.Any(a => a.TaskId == id && a.UserId == userId))
-                return StatusCode(403, "You can only update the task you are assigned to.");
-
-            // Sadece admin olmayanlar için, sadece değişen alanlarda claim kontrolü
-            if (!isAdmin) {
-                if (updates.Title != null && updates.Title != existingTask.Title && !HasClaim(userId, "Edit Task Title"))
+            if (!_userService.IsUserAdminFromToken(User))
+            {
+                if (updates.Title != existingTask.Title && 
+                    !_userService.HasUserPermissionFromToken(User, "Edit Task Title"))
                     return StatusCode(403, "You don't have permission to edit task title.");
-                if (updates.Description != null && updates.Description != existingTask.Description && !HasClaim(userId, "Edit Task Description"))
+                
+                if (updates.Description != existingTask.Description && 
+                    !_userService.HasUserPermissionFromToken(User, "Edit Task Description"))
                     return StatusCode(403, "You don't have permission to edit task description.");
-                if (updates.Completed != null && updates.Completed != existingTask.Completed && !HasClaim(userId, "Edit Task Status"))
+                
+                if (updates.Completed != existingTask.Completed && 
+                    !_userService.HasUserPermissionFromToken(User, "Edit Task Status"))
                     return StatusCode(403, "You don't have permission to edit task status.");
-                if (updates.Category != null && updates.Category != existingTask.Category && !HasClaim(userId, "Edit Task Assignees"))
-                    return StatusCode(403, "You don't have permission to edit task category.");
             }
 
-            // Sadece izin verilen ve değişen alanları güncelle
-            if (updates.Title != null && updates.Title != existingTask.Title)
+           
+            // Kategori kontrolü
+            if (updates.CategoryId.HasValue && updates.CategoryId != existingTask.CategoryId)
+            {
+                var category = await _taskCategoryRepository.GetByIdAsync(updates.CategoryId.Value);
+                if (category == null)
+                    return BadRequest("Geçersiz kategori ID");
+            }
+
+            if (updates.Title != existingTask.Title)
                 existingTask.Title = updates.Title;
-            if (updates.Description != null && updates.Description != existingTask.Description)
+            if (updates.Description != existingTask.Description)
                 existingTask.Description = updates.Description;
-            if (updates.Completed != null && updates.Completed != existingTask.Completed)
+            if (updates.Completed != existingTask.Completed)
                 existingTask.Completed = updates.Completed;
-            if (updates.Category != null && updates.Category != existingTask.Category)
-                existingTask.Category = updates.Category;
+            if (updates.CategoryId != existingTask.CategoryId)
+                existingTask.CategoryId = updates.CategoryId;
 
-            await _context.SaveChangesAsync();
-            return Ok(existingTask);
-        }
+            var updatedTask = await _taskService.UpdateTaskAsync(id, existingTask);
+            if (updatedTask == null)
+                return NotFound();
 
-        public class UpdateTaskDto
-        {
-            public string Title { get; set; }
-            public string Description { get; set; }
-            public TaskCategory Category { get; set; }
-            public bool Completed { get; set; }
-        }
+           
+            var result = new
+            {
+                updatedTask.Id,
+                updatedTask.Title,
+                updatedTask.Description,
+                updatedTask.Completed,
+                Category = updatedTask.Category != null ? new
+                {
+                    updatedTask.Category.Id,
+                    updatedTask.Category.Name,
+                    updatedTask.Category.Color
+                } : null
+            };
 
-        public class CreateTaskDto
-        {
-            public string Title { get; set; }
-            public string Description { get; set; }
-            public TaskCategory Category { get; set; }
-            public bool Completed { get; set; }
+            return Ok(result);
         }
     }
 } 

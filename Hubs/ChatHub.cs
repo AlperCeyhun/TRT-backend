@@ -55,10 +55,13 @@ namespace TRT_backend.Hubs
                 CreatedAt = DateTime.UtcNow
             };
 
+            // Mesajı önce veritabanına kaydet
+            db.Messages.Add(message);
+            await db.SaveChangesAsync();
+
             // Alıcı bağlıysa mesajı gönder
             if (_connections.TryGetValue(toUser.Id.ToString(), out var receiverConnId))
             {
-                Console.WriteLine($"→ Message sending: {toUser.username} ({receiverConnId})");
                 await Clients.Client(receiverConnId).SendAsync("ReceiveMessage", new
                 {
                     message.Id,
@@ -75,7 +78,7 @@ namespace TRT_backend.Hubs
                 Console.WriteLine($"Receiver offline: {toUser.username}");
             }
 
-            // Göndericiye de mesaj gönderildi onayı
+            // Göndericiye de mesaj gönderildi onayı (ID ile birlikte)
             if (_connections.TryGetValue(fromUser.Id.ToString(), out var senderConnId))
             {
                 await Clients.Client(senderConnId).SendAsync("MessageSent", new
@@ -83,13 +86,10 @@ namespace TRT_backend.Hubs
                     message.Id,
                     message.ToUserId,
                     message.Content,
-                    message.CreatedAt
+                    message.CreatedAt,
+                    ToUserName = toUser.username
                 });
             }
-
-            // Mesaj veritabanına kaydedilir
-            db.Messages.Add(message);
-            await db.SaveChangesAsync();
         }
 
         // Kullanıcı bağlantısını kopardığında tetiklenir

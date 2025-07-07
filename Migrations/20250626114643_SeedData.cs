@@ -199,6 +199,48 @@ namespace TRT_backend.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "Languages",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Code = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Languages", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ClaimLanguages",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ClaimId = table.Column<int>(type: "int", nullable: false),
+                    LanguageId = table.Column<int>(type: "int", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ClaimLanguages", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ClaimLanguages_Claims_ClaimId",
+                        column: x => x.ClaimId,
+                        principalTable: "Claims",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ClaimLanguages_Languages_LanguageId",
+                        column: x => x.LanguageId,
+                        principalTable: "Languages",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.InsertData(
                 table: "Claims",
                 columns: new[] { "Id", "ClaimName" },
@@ -243,6 +285,36 @@ namespace TRT_backend.Migrations
                 table: "UserRoles",
                 columns: new[] { "Id", "RoleId", "UserId" },
                 values: new object[] { 1, 1, 1 });
+
+            migrationBuilder.InsertData(
+                table: "TaskCategories",
+                columns: new[] { "Id", "Name" },
+                values: new object[,]
+                {
+                    { 1, "Acil" },
+                    { 2, "Normal" },
+                    { 3, "DusukOncelik" }
+                });
+
+            migrationBuilder.InsertData(
+                table: "Languages",
+                columns: new[] { "Id", "Code", "Name" },
+                values: new object[,]
+                {
+                    { 1, "tr", "Türkçe" },
+                    { 2, "en", "English" }
+                });
+
+            migrationBuilder.InsertData(
+                table: "ClaimLanguages",
+                columns: new[] { "Id", "ClaimId", "LanguageId", "Name", "Description" },
+                values: new object[,]
+                {
+                    { 1, 1, 1, "Görev Ekle", "Bir görev ekleme yetkisi" },
+                    { 2, 1, 2, "Add Task", "Permission to add a task" },
+                    { 3, 2, 1, "Görev Sil", "Bir görevi silme yetkisi" },
+                    { 4, 2, 2, "Delete Task", "Permission to delete a task" }
+                });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Assignees_TaskId",
@@ -324,6 +396,12 @@ namespace TRT_backend.Migrations
 
             migrationBuilder.DropTable(
                 name: "Users");
+
+            migrationBuilder.DropTable(
+                name: "Languages");
+
+            migrationBuilder.DropTable(
+                name: "ClaimLanguages");
         }
     }
 }
