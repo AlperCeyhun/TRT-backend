@@ -9,18 +9,6 @@ using TRT_backend.Repositories;
 
 namespace TRT_backend.Services
 {
-    public class UserDto
-    {
-        public int Id { get; set; }
-        public string username { get; set; }
-    }
-
-    public class RoleDto
-    {
-        public int Id { get; set; }
-        public string RoleName { get; set; }
-    }
-
     public class UserService : IUserService
     {
         private readonly IUserRepository _userRepository;

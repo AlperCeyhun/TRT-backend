@@ -12,8 +12,8 @@ using TRT_backend.Data;
 namespace TRT_backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250630083731_RemoveTaskCategoryEnum")]
-    partial class RemoveTaskCategoryEnum
+    [Migration("20250707111110_AddLanguageAndClaimLanguage")]
+    partial class AddLanguageAndClaimLanguage
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -46,6 +46,182 @@ namespace TRT_backend.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Assignees");
+                });
+
+            modelBuilder.Entity("TRT_backend.Models.ClaimLanguage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ClaimId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("LanguageId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClaimId");
+
+                    b.HasIndex("LanguageId");
+
+                    b.ToTable("ClaimLanguages");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            ClaimId = 1,
+                            Description = "Yeni görev oluşturma izni",
+                            LanguageId = 1,
+                            Name = "Görev Ekle"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            ClaimId = 2,
+                            Description = "Görev silme izni",
+                            LanguageId = 1,
+                            Name = "Görev Sil"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            ClaimId = 3,
+                            Description = "Görev başlığını değiştirme izni",
+                            LanguageId = 1,
+                            Name = "Görev Başlığını Düzenle"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            ClaimId = 4,
+                            Description = "Görev açıklamasını değiştirme izni",
+                            LanguageId = 1,
+                            Name = "Görev Açıklamasını Düzenle"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            ClaimId = 5,
+                            Description = "Görev durumunu değiştirme izni",
+                            LanguageId = 1,
+                            Name = "Görev Durumunu Düzenle"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            ClaimId = 6,
+                            Description = "Görev atayanlarını değiştirme izni",
+                            LanguageId = 1,
+                            Name = "Görev Atayanları Düzenle"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            ClaimId = 1,
+                            Description = "Permission to create new task",
+                            LanguageId = 2,
+                            Name = "Add Task"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            ClaimId = 2,
+                            Description = "Permission to delete task",
+                            LanguageId = 2,
+                            Name = "Delete Task"
+                        },
+                        new
+                        {
+                            Id = 9,
+                            ClaimId = 3,
+                            Description = "Permission to edit task title",
+                            LanguageId = 2,
+                            Name = "Edit Task Title"
+                        },
+                        new
+                        {
+                            Id = 10,
+                            ClaimId = 4,
+                            Description = "Permission to edit task description",
+                            LanguageId = 2,
+                            Name = "Edit Task Description"
+                        },
+                        new
+                        {
+                            Id = 11,
+                            ClaimId = 5,
+                            Description = "Permission to edit task status",
+                            LanguageId = 2,
+                            Name = "Edit Task Status"
+                        },
+                        new
+                        {
+                            Id = 12,
+                            ClaimId = 6,
+                            Description = "Permission to edit task assignees",
+                            LanguageId = 2,
+                            Name = "Edit Task Assignees"
+                        },
+                        new
+                        {
+                            Id = 13,
+                            ClaimId = 1,
+                            Description = "Permission d'ajouter une tâche",
+                            LanguageId = 3,
+                            Name = "Ajouter Tâche"
+                        },
+                        new
+                        {
+                            Id = 14,
+                            ClaimId = 2,
+                            Description = "Permission de supprimer une tâche",
+                            LanguageId = 3,
+                            Name = "Supprimer Tâche"
+                        },
+                        new
+                        {
+                            Id = 15,
+                            ClaimId = 3,
+                            Description = "Permission de modifier le titre de la tâche",
+                            LanguageId = 3,
+                            Name = "Modifier Titre Tâche"
+                        },
+                        new
+                        {
+                            Id = 16,
+                            ClaimId = 4,
+                            Description = "Permission de modifier la description de la tâche",
+                            LanguageId = 3,
+                            Name = "Modifier Description Tâche"
+                        },
+                        new
+                        {
+                            Id = 17,
+                            ClaimId = 5,
+                            Description = "Permission de modifier le statut de la tâche",
+                            LanguageId = 3,
+                            Name = "Modifier Statut Tâche"
+                        },
+                        new
+                        {
+                            Id = 18,
+                            ClaimId = 6,
+                            Description = "Permission de modifier les assignés de la tâche",
+                            LanguageId = 3,
+                            Name = "Modifier Assignés Tâche"
+                        });
                 });
 
             modelBuilder.Entity("TRT_backend.Models.Claims", b =>
@@ -94,6 +270,47 @@ namespace TRT_backend.Migrations
                         {
                             Id = 6,
                             ClaimName = "EditTaskAssignees"
+                        });
+                });
+
+            modelBuilder.Entity("TRT_backend.Models.Language", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Languages");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Code = "tr",
+                            Name = "Türkçe"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Code = "en",
+                            Name = "English"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Code = "fr",
+                            Name = "Français"
                         });
                 });
 
@@ -224,12 +441,61 @@ namespace TRT_backend.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Name")
+                    b.Property<string>("Color")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
                     b.ToTable("TaskCategories");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Color = "#007bff",
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Genel görevler",
+                            Name = "Genel"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Color = "#dc3545",
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Acil görevler",
+                            Name = "Acil"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Color = "#ffc107",
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Önemli görevler",
+                            Name = "Önemli"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Color = "#6c757d",
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Düşük öncelikli görevler",
+                            Name = "Düşük Öncelik"
+                        });
                 });
 
             modelBuilder.Entity("TRT_backend.Models.TodoTask", b =>
@@ -240,22 +506,28 @@ namespace TRT_backend.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("CategoryId")
+                        .HasColumnType("int");
+
                     b.Property<bool>("Completed")
                         .HasColumnType("bit");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("TaskCategoryId")
-                        .HasColumnType("int");
 
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("TaskCategoryId");
+                    b.HasIndex("CategoryId");
 
                     b.ToTable("Tasks");
                 });
@@ -362,6 +634,25 @@ namespace TRT_backend.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("TRT_backend.Models.ClaimLanguage", b =>
+                {
+                    b.HasOne("TRT_backend.Models.Claims", "Claim")
+                        .WithMany()
+                        .HasForeignKey("ClaimId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TRT_backend.Models.Language", "Language")
+                        .WithMany()
+                        .HasForeignKey("LanguageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Claim");
+
+                    b.Navigation("Language");
+                });
+
             modelBuilder.Entity("TRT_backend.Models.Message", b =>
                 {
                     b.HasOne("TRT_backend.Models.User", "FromUser")
@@ -402,11 +693,12 @@ namespace TRT_backend.Migrations
 
             modelBuilder.Entity("TRT_backend.Models.TodoTask", b =>
                 {
-                    b.HasOne("TRT_backend.Models.TaskCategory", "TaskCategory")
-                        .WithMany()
-                        .HasForeignKey("TaskCategoryId");
+                    b.HasOne("TRT_backend.Models.TaskCategory", "Category")
+                        .WithMany("Tasks")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("TaskCategory");
+                    b.Navigation("Category");
                 });
 
             modelBuilder.Entity("TRT_backend.Models.UserClaim", b =>
@@ -459,6 +751,11 @@ namespace TRT_backend.Migrations
                     b.Navigation("RoleClaims");
 
                     b.Navigation("UserRoles");
+                });
+
+            modelBuilder.Entity("TRT_backend.Models.TaskCategory", b =>
+                {
+                    b.Navigation("Tasks");
                 });
 
             modelBuilder.Entity("TRT_backend.Models.TodoTask", b =>

@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace TRT_backend.Migrations
 {
     /// <inheritdoc />
-    public partial class SeedData : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -27,6 +27,20 @@ namespace TRT_backend.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Languages",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Code = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Languages", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Roles",
                 columns: table => new
                 {
@@ -40,19 +54,20 @@ namespace TRT_backend.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Tasks",
+                name: "TaskCategories",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Category = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Completed = table.Column<bool>(type: "bit", nullable: false)
+                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    Color = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Tasks", x => x.Id);
+                    table.PrimaryKey("PK_TaskCategories", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -67,6 +82,34 @@ namespace TRT_backend.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Users", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ClaimLanguages",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ClaimId = table.Column<int>(type: "int", nullable: false),
+                    LanguageId = table.Column<int>(type: "int", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ClaimLanguages", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ClaimLanguages_Claims_ClaimId",
+                        column: x => x.ClaimId,
+                        principalTable: "Claims",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ClaimLanguages_Languages_LanguageId",
+                        column: x => x.LanguageId,
+                        principalTable: "Languages",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -96,29 +139,27 @@ namespace TRT_backend.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Assignees",
+                name: "Tasks",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    UserId = table.Column<int>(type: "int", nullable: false),
-                    TaskId = table.Column<int>(type: "int", nullable: false)
+                    Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Completed = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CategoryId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Assignees", x => x.Id);
+                    table.PrimaryKey("PK_Tasks", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Assignees_Tasks_TaskId",
-                        column: x => x.TaskId,
-                        principalTable: "Tasks",
+                        name: "FK_Tasks_TaskCategories_CategoryId",
+                        column: x => x.CategoryId,
+                        principalTable: "TaskCategories",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Assignees_Users_UserId",
-                        column: x => x.UserId,
-                        principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.SetNull);
                 });
 
             migrationBuilder.CreateTable(
@@ -200,43 +241,27 @@ namespace TRT_backend.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Languages",
+                name: "Assignees",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Code = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    TaskId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Languages", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "ClaimLanguages",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    ClaimId = table.Column<int>(type: "int", nullable: false),
-                    LanguageId = table.Column<int>(type: "int", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ClaimLanguages", x => x.Id);
+                    table.PrimaryKey("PK_Assignees", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_ClaimLanguages_Claims_ClaimId",
-                        column: x => x.ClaimId,
-                        principalTable: "Claims",
+                        name: "FK_Assignees_Tasks_TaskId",
+                        column: x => x.TaskId,
+                        principalTable: "Tasks",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_ClaimLanguages_Languages_LanguageId",
-                        column: x => x.LanguageId,
-                        principalTable: "Languages",
+                        name: "FK_Assignees_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -246,12 +271,12 @@ namespace TRT_backend.Migrations
                 columns: new[] { "Id", "ClaimName" },
                 values: new object[,]
                 {
-                    { 1, "Add Task" },
-                    { 2, "Delete Task" },
-                    { 3, "Edit Task Title" },
-                    { 4, "Edit Task Description" },
-                    { 5, "Edit Task Status" },
-                    { 6, "Edit Task Assignees" }
+                    { 1, "AddTask" },
+                    { 2, "DeleteTask" },
+                    { 3, "EditTaskTitle" },
+                    { 4, "EditTaskDescription" },
+                    { 5, "EditTaskStatus" },
+                    { 6, "EditTaskAssignees" }
                 });
 
             migrationBuilder.InsertData(
@@ -261,6 +286,17 @@ namespace TRT_backend.Migrations
                 {
                     { 1, "Admin" },
                     { 2, "User" }
+                });
+
+            migrationBuilder.InsertData(
+                table: "TaskCategories",
+                columns: new[] { "Id", "Color", "CreatedAt", "Description", "Name", "UpdatedAt" },
+                values: new object[,]
+                {
+                    { 1, "#007bff", new DateTime(2025, 7, 7, 8, 6, 52, 35, DateTimeKind.Utc).AddTicks(8426), "Genel görevler", "Genel", null },
+                    { 2, "#dc3545", new DateTime(2025, 7, 7, 8, 6, 52, 36, DateTimeKind.Utc).AddTicks(644), "Acil görevler", "Acil", null },
+                    { 3, "#ffc107", new DateTime(2025, 7, 7, 8, 6, 52, 36, DateTimeKind.Utc).AddTicks(650), "Önemli görevler", "Önemli", null },
+                    { 4, "#6c757d", new DateTime(2025, 7, 7, 8, 6, 52, 36, DateTimeKind.Utc).AddTicks(652), "Düşük öncelikli görevler", "Düşük Öncelik", null }
                 });
 
             migrationBuilder.InsertData(
@@ -286,36 +322,6 @@ namespace TRT_backend.Migrations
                 columns: new[] { "Id", "RoleId", "UserId" },
                 values: new object[] { 1, 1, 1 });
 
-            migrationBuilder.InsertData(
-                table: "TaskCategories",
-                columns: new[] { "Id", "Name" },
-                values: new object[,]
-                {
-                    { 1, "Acil" },
-                    { 2, "Normal" },
-                    { 3, "DusukOncelik" }
-                });
-
-            migrationBuilder.InsertData(
-                table: "Languages",
-                columns: new[] { "Id", "Code", "Name" },
-                values: new object[,]
-                {
-                    { 1, "tr", "Türkçe" },
-                    { 2, "en", "English" }
-                });
-
-            migrationBuilder.InsertData(
-                table: "ClaimLanguages",
-                columns: new[] { "Id", "ClaimId", "LanguageId", "Name", "Description" },
-                values: new object[,]
-                {
-                    { 1, 1, 1, "Görev Ekle", "Bir görev ekleme yetkisi" },
-                    { 2, 1, 2, "Add Task", "Permission to add a task" },
-                    { 3, 2, 1, "Görev Sil", "Bir görevi silme yetkisi" },
-                    { 4, 2, 2, "Delete Task", "Permission to delete a task" }
-                });
-
             migrationBuilder.CreateIndex(
                 name: "IX_Assignees_TaskId",
                 table: "Assignees",
@@ -325,6 +331,16 @@ namespace TRT_backend.Migrations
                 name: "IX_Assignees_UserId",
                 table: "Assignees",
                 column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ClaimLanguages_ClaimId",
+                table: "ClaimLanguages",
+                column: "ClaimId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ClaimLanguages_LanguageId",
+                table: "ClaimLanguages",
+                column: "LanguageId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Messages_FromUserId",
@@ -345,6 +361,11 @@ namespace TRT_backend.Migrations
                 name: "IX_RoleClaims_RoleId",
                 table: "RoleClaims",
                 column: "RoleId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Tasks_CategoryId",
+                table: "Tasks",
+                column: "CategoryId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_UserClaims_ClaimId",
@@ -374,6 +395,9 @@ namespace TRT_backend.Migrations
                 name: "Assignees");
 
             migrationBuilder.DropTable(
+                name: "ClaimLanguages");
+
+            migrationBuilder.DropTable(
                 name: "Messages");
 
             migrationBuilder.DropTable(
@@ -389,6 +413,9 @@ namespace TRT_backend.Migrations
                 name: "Tasks");
 
             migrationBuilder.DropTable(
+                name: "Languages");
+
+            migrationBuilder.DropTable(
                 name: "Claims");
 
             migrationBuilder.DropTable(
@@ -398,10 +425,7 @@ namespace TRT_backend.Migrations
                 name: "Users");
 
             migrationBuilder.DropTable(
-                name: "Languages");
-
-            migrationBuilder.DropTable(
-                name: "ClaimLanguages");
+                name: "TaskCategories");
         }
     }
 }

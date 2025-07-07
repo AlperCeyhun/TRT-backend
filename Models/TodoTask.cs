@@ -15,7 +15,7 @@ namespace TRT_backend.Models
         [Required(ErrorMessage = "It can't be empty.")]
         public bool Completed { get; set; }
 
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedAt { get; set; }
 
         public DateTime? UpdatedAt { get; set; }
 

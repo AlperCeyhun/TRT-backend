@@ -12,8 +12,8 @@ using TRT_backend.Data;
 namespace TRT_backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250703072005_RemoveTaskCategoryAndRelations")]
-    partial class RemoveTaskCategoryAndRelations
+    [Migration("20250707090302_firstmigrations")]
+    partial class firstmigrations
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -267,6 +267,71 @@ namespace TRT_backend.Migrations
                         });
                 });
 
+            modelBuilder.Entity("TRT_backend.Models.TaskCategory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Color")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("TaskCategories");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Color = "#007bff",
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Genel görevler",
+                            Name = "Genel"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Color = "#dc3545",
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Acil görevler",
+                            Name = "Acil"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Color = "#ffc107",
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Önemli görevler",
+                            Name = "Önemli"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Color = "#6c757d",
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Düşük öncelikli görevler",
+                            Name = "Düşük Öncelik"
+                        });
+                });
+
             modelBuilder.Entity("TRT_backend.Models.TodoTask", b =>
                 {
                     b.Property<int>("Id")
@@ -275,8 +340,14 @@ namespace TRT_backend.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("CategoryId")
+                        .HasColumnType("int");
+
                     b.Property<bool>("Completed")
                         .HasColumnType("bit");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
@@ -285,7 +356,12 @@ namespace TRT_backend.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
 
                     b.ToTable("Tasks");
                 });
@@ -449,6 +525,16 @@ namespace TRT_backend.Migrations
                     b.Navigation("Role");
                 });
 
+            modelBuilder.Entity("TRT_backend.Models.TodoTask", b =>
+                {
+                    b.HasOne("TRT_backend.Models.TaskCategory", "Category")
+                        .WithMany("Tasks")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Category");
+                });
+
             modelBuilder.Entity("TRT_backend.Models.UserClaim", b =>
                 {
                     b.HasOne("TRT_backend.Models.Claims", "Claim")
@@ -499,6 +585,11 @@ namespace TRT_backend.Migrations
                     b.Navigation("RoleClaims");
 
                     b.Navigation("UserRoles");
+                });
+
+            modelBuilder.Entity("TRT_backend.Models.TaskCategory", b =>
+                {
+                    b.Navigation("Tasks");
                 });
 
             modelBuilder.Entity("TRT_backend.Models.TodoTask", b =>
