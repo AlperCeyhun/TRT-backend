@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using TRT_backend.Data;
 using TRT_backend.Models;
+using TRT_backend.Services;
 using Microsoft.AspNetCore.Authorization;
 
 namespace TRT_backend.Controllers
@@ -10,41 +9,29 @@ namespace TRT_backend.Controllers
     [Route("api/message")]
     public class MessageController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly IMessageService _messageService;
 
-        public MessageController(AppDbContext context)
+        public MessageController(IMessageService messageService)
         {
-            _context = context;
+            _messageService = messageService;
         }
 
         [Tags("MessageManagement")]
         [HttpGet("{user1Name}/{user2Name}")]
-         public async Task<IActionResult> GetMessages(string user1Name, string user2Name)
-         {
-             var fromUser = await _context.Users.FirstOrDefaultAsync(u => u.username == user1Name);
-             var toUser = await _context.Users.FirstOrDefaultAsync(u => u.username == user2Name);
-         
-             if (fromUser == null || toUser == null)
-                 return NotFound("User not found.");
-         
-             var messages = await _context.Messages
-                 .Include(m => m.FromUser)
-                 .Include(m => m.ToUser)
-                 .Where(m =>
-                     (m.FromUserId == fromUser.Id && m.ToUserId == toUser.Id) ||
-                     (m.FromUserId == toUser.Id && m.ToUserId == fromUser.Id))
-                 .OrderBy(m => m.CreatedAt)
-                 .Select(m => new {
-                     m.Id,
-                     m.Content,
-                     m.CreatedAt,
-                     FromUserName = m.FromUser.username,
-                     ToUserName = m.ToUser.username
-                 })
-                 .ToListAsync();
-         
-             return Ok(messages);
-         }
+        public async Task<IActionResult> GetMessages(string user1Name, string user2Name)
+        {
+            var messages = await _messageService.GetMessagesBetweenUsersAsync(user1Name, user2Name);
+            if (messages == null || messages.Count == 0)
+                return NotFound("User not found or no messages.");
 
+            var result = messages.Select(m => new {
+                m.Id,
+                m.Content,
+                m.CreatedAt,
+                FromUserName = m.FromUser.username,
+                ToUserName = m.ToUser.username
+            });
+            return Ok(result);
+        }
     }
 }

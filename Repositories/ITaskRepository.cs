@@ -11,5 +11,7 @@ namespace TRT_backend.Repositories
         Task<bool> IsUserAssignedToTaskAsync(int userId, int taskId);
         Task AssignUserToTaskAsync(int taskId, int userId);
         Task UnassignUserFromTaskAsync(int taskId, int userId);
+        Task<bool> IsUserAdminAsync(int userId);
+        Task<bool> UserHasClaimAsync(int userId, string claimName);
     }
 } 

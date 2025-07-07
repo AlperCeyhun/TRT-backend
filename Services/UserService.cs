@@ -12,14 +12,12 @@ namespace TRT_backend.Services
     public class UserService : IUserService
     {
         private readonly IUserRepository _userRepository;
-        private readonly AppDbContext _context;
         private readonly IConfiguration _configuration;
         private readonly ICacheService _cache;
 
-        public UserService(IUserRepository userRepository, AppDbContext context, IConfiguration configuration, ICacheService cache)
+        public UserService(IUserRepository userRepository, IConfiguration configuration, ICacheService cache)
         {
             _userRepository = userRepository;
-            _context = context;
             _configuration = configuration;
             _cache = cache;
         }
@@ -94,71 +92,31 @@ namespace TRT_backend.Services
         public async Task<string> GenerateJwtTokenAsync(User user)
         {
             var userWithRoles = await _userRepository.GetUserWithRolesAsync(user.Id);
-            
-            // Kullanıcının atandığı task ID'lerini al
-            var assignedTaskIds = await _context.Assignees
-                .Where(a => a.UserId == user.Id)
-                .Select(a => a.TaskId)
-                .ToListAsync();
-            
+
+            var assignedTaskIds = await _userRepository.GetAssignedTaskIdsAsync(user.Id);
+
             var claims = new List<Claim>
             {
                 new Claim("UserId", user.Id.ToString()),
                 new Claim("Username", user.username)
             };
 
-            // Role bilgilerini ekle
-            var roleIds = new List<int>();
-            var roleNames = new List<string>();
-            var isAdmin = false;
-            
-            if (userWithRoles.UserRoles != null)
-            {
-                foreach (var userRole in userWithRoles.UserRoles)
-                {
-                    roleIds.Add(userRole.RoleId);
-                    roleNames.Add(userRole.Role.RoleName);
-                    if (userRole.Role.RoleName == "Admin")
-                        isAdmin = true;
-                }
-            }
+            var roleIds = await _userRepository.GetRoleIdsAsync(user.Id);
+            var roleNames = await _userRepository.GetRoleNamesAsync(user.Id);
+            var isAdmin = roleNames.Contains("Admin");
 
-            // Admin kontrolü
             claims.Add(new Claim("IsAdmin", isAdmin.ToString()));
             claims.Add(new Claim("CanViewAllTasks", isAdmin.ToString()));
 
-            // Claim bilgilerini ekle
             var permissions = new List<string>();
-            if (userWithRoles.UserClaims != null)
+            permissions.AddRange(await _userRepository.GetUserClaimNamesAsync(user.Id));
+            var roleClaims = await _userRepository.GetRoleClaimNamesAsync(user.Id);
+            foreach (var claimName in roleClaims)
             {
-                foreach (var userClaim in userWithRoles.UserClaims)
-                {
-                    permissions.Add(userClaim.Claim.ClaimName);
-                }
+                if (!permissions.Contains(claimName))
+                    permissions.Add(claimName);
             }
 
-            // Role'lardan gelen claim'leri de ekle
-            if (userWithRoles.UserRoles != null)
-            {
-                foreach (var userRole in userWithRoles.UserRoles)
-                {
-                    var roleClaims = await _context.RoleClaims
-                        .Where(rc => rc.RoleId == userRole.RoleId)
-                        .Include(rc => rc.Claim)
-                        .Select(rc => rc.Claim.ClaimName)
-                        .ToListAsync();
-                    
-                    foreach (var claimName in roleClaims)
-                    {
-                        if (!permissions.Contains(claimName))
-                        {
-                            permissions.Add(claimName);
-                        }
-                    }
-                }
-            }
-
-            // Sadece sadeleştirilmiş claim'ler ekle
             claims.Add(new Claim("RoleIds", string.Join(",", roleIds)));
             claims.Add(new Claim("RoleNames", string.Join(",", roleNames)));
             claims.Add(new Claim("Permissions", string.Join(",", permissions)));
@@ -270,26 +228,16 @@ namespace TRT_backend.Services
         {
             var cacheKey = $"user_has_claim_{userId}_{claimId}";
             var cachedResult = _cache.Get<bool?>(cacheKey);
-            
             if (cachedResult.HasValue)
                 return cachedResult.Value;
-
-            var hasClaim = await _context.UserClaims.AnyAsync(uc => uc.UserId == userId && uc.ClaimId == claimId);
+            var hasClaim = await _userRepository.UserHasClaimAsync(userId, claimId);
             _cache.Set(cacheKey, hasClaim, TimeSpan.FromMinutes(10));
             return hasClaim;
         }
 
         public async Task AssignClaimToUserAsync(int userId, int claimId)
         {
-            var userClaim = new UserClaim
-            {
-                UserId = userId,
-                ClaimId = claimId
-            };
-            _context.UserClaims.Add(userClaim);
-            await _context.SaveChangesAsync();
-            
-            // Cache'leri temizle
+            await _userRepository.AddClaimToUserAsync(userId, claimId);
             _cache.Remove($"user_{userId}");
             _cache.Remove($"user_has_claim_{userId}_{claimId}");
             _cache.Remove("all_users");
@@ -297,17 +245,10 @@ namespace TRT_backend.Services
 
         public async Task RemoveClaimFromUserAsync(int userId, int claimId)
         {
-            var userClaim = await _context.UserClaims.FirstOrDefaultAsync(uc => uc.UserId == userId && uc.ClaimId == claimId);
-            if (userClaim != null)
-            {
-                _context.UserClaims.Remove(userClaim);
-                await _context.SaveChangesAsync();
-                
-                // Cache'leri temizle
-                _cache.Remove($"user_{userId}");
-                _cache.Remove($"user_has_claim_{userId}_{claimId}");
-                _cache.Remove("all_users");
-            }
+            await _userRepository.RemoveClaimFromUserAsync(userId, claimId);
+            _cache.Remove($"user_{userId}");
+            _cache.Remove($"user_has_claim_{userId}_{claimId}");
+            _cache.Remove("all_users");
         }
 
         public async Task DeleteUserAsync(int id)
@@ -315,41 +256,13 @@ namespace TRT_backend.Services
             var user = await _userRepository.GetUserWithRolesAsync(id);
             if (user != null)
             {
-                // İlişkili mesajları sil
-                var messages = await _context.Messages
-                    .Where(m => m.FromUserId == id || m.ToUserId == id)
-                    .ToListAsync();
-                _context.Messages.RemoveRange(messages);
-
-                // İlişkili user claims'leri sil
-                var userClaims = await _context.UserClaims
-                    .Where(uc => uc.UserId == id)
-                    .ToListAsync();
-                _context.UserClaims.RemoveRange(userClaims);
-
-                // İlişkili user roles'leri sil
-                var userRoles = await _context.UserRoles
-                    .Where(ur => ur.UserId == id)
-                    .ToListAsync();
-                _context.UserRoles.RemoveRange(userRoles);
-
-                // İlişkili assignee'leri sil
-                var assignees = await _context.Assignees
-                    .Where(a => a.UserId == id)
-                    .ToListAsync();
-                _context.Assignees.RemoveRange(assignees);
-
-                // Kullanıcıyı sil
+                await _userRepository.RemoveUserRelationsAsync(id, user.username);
                 await _userRepository.DeleteAsync(id);
-                
-                // Tüm cache'leri temizle
                 _cache.Remove("all_users");
                 _cache.Remove($"user_{id}");
                 _cache.Remove($"user_username_{user.username}");
                 _cache.Remove($"user_exists_{user.username}");
                 _cache.Remove($"user_exists_id_{id}");
-                
-                // Task cache'lerini de temizle çünkü assignee değişti
                 _cache.Remove("all_tasks");
                 _cache.Remove("user_tasks");
             }
@@ -359,12 +272,10 @@ namespace TRT_backend.Services
         {
             var cacheKey = "all_claims";
             var cachedClaims = _cache.Get<List<Claims>>(cacheKey);
-            
             if (cachedClaims != null)
                 return cachedClaims;
-
-            var claims = await _context.Claims.ToListAsync();
-            _cache.Set(cacheKey, claims, TimeSpan.FromHours(1)); // Claims sık değişmez
+            var claims = await _userRepository.GetAllClaimsAsync();
+            _cache.Set(cacheKey, claims, TimeSpan.FromHours(1));
             return claims;
         }
 
@@ -372,12 +283,10 @@ namespace TRT_backend.Services
         {
             var cacheKey = "all_roles";
             var cachedRoles = _cache.Get<List<Role>>(cacheKey);
-            
             if (cachedRoles != null)
                 return cachedRoles;
-
-            var roles = await _context.Roles.ToListAsync();
-            _cache.Set(cacheKey, roles, TimeSpan.FromHours(1)); // Roles sık değişmez
+            var roles = await _userRepository.GetAllRolesAsync();
+            _cache.Set(cacheKey, roles, TimeSpan.FromHours(1));
             return roles;
         }
     }

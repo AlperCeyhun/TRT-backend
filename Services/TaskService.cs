@@ -96,61 +96,29 @@ namespace TRT_backend.Services
 
         public async Task<bool> CanUserEditTaskAsync(int userId, int taskId, string operation)
         {
-            // Admin her şeyi yapabilir
-            var isAdmin = await _context.UserRoles
-                .AnyAsync(ur => ur.UserId == userId && ur.Role.RoleName == "Admin");
-            
+            var isAdmin = await _taskRepository.IsUserAdminAsync(userId);
             if (isAdmin)
                 return true;
 
-            // Kullanıcı task'a atanmış mı kontrol et
             var isAssigned = await _taskRepository.IsUserAssignedToTaskAsync(userId, taskId);
-
             if (!isAssigned)
                 return false;
 
-            // Operation'a göre claim kontrolü
-            var hasClaim = await _context.UserRoles
-                .Where(ur => ur.UserId == userId)
-                .SelectMany(ur => _context.RoleClaims
-                    .Where(rc => rc.RoleId == ur.RoleId)
-                    .Select(rc => rc.Claim.ClaimName))
-                .Concat(_context.UserClaims
-                    .Where(uc => uc.UserId == userId)
-                    .Select(uc => uc.Claim.ClaimName))
-                .Distinct()
-                .ContainsAsync(operation);
-
+            var hasClaim = await _taskRepository.UserHasClaimAsync(userId, operation);
             return hasClaim;
         }
 
         public async Task<bool> CanUserDeleteTaskAsync(int userId, int taskId)
         {
-            // Admin her şeyi silebilir
-            var isAdmin = await _context.UserRoles
-                .AnyAsync(ur => ur.UserId == userId && ur.Role.RoleName == "Admin");
-            
+            var isAdmin = await _taskRepository.IsUserAdminAsync(userId);
             if (isAdmin)
                 return true;
 
-            // Kullanıcı task'a atanmış mı kontrol et
             var isAssigned = await _taskRepository.IsUserAssignedToTaskAsync(userId, taskId);
-
             if (!isAssigned)
                 return false;
 
-            // Delete Task claim'i var mı kontrol et
-            var hasDeleteClaim = await _context.UserRoles
-                .Where(ur => ur.UserId == userId)
-                .SelectMany(ur => _context.RoleClaims
-                    .Where(rc => rc.RoleId == ur.RoleId)
-                    .Select(rc => rc.Claim.ClaimName))
-                .Concat(_context.UserClaims
-                    .Where(uc => uc.UserId == userId)
-                    .Select(uc => uc.Claim.ClaimName))
-                .Distinct()
-                .ContainsAsync("Delete Task");
-
+            var hasDeleteClaim = await _taskRepository.UserHasClaimAsync(userId, "Delete Task");
             return hasDeleteClaim;
         }
 

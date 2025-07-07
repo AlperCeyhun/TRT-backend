@@ -102,5 +102,30 @@ namespace TRT_backend.Repositories
                 await _context.SaveChangesAsync();
             }
         }
+
+        public async Task<bool> IsUserAdminAsync(int userId)
+        {
+            return await _context.UserRoles.AnyAsync(ur => ur.UserId == userId && ur.Role.RoleName == "Admin");
+        }
+
+        public async Task<bool> UserHasClaimAsync(int userId, string claimName)
+        {
+            var isAdmin = await IsUserAdminAsync(userId);
+            if (isAdmin) return true;
+
+            var userClaims = await _context.UserClaims
+                .Where(uc => uc.UserId == userId)
+                .Select(uc => uc.Claim.ClaimName)
+                .ToListAsync();
+            var roleIds = await _context.UserRoles
+                .Where(ur => ur.UserId == userId)
+                .Select(ur => ur.RoleId)
+                .ToListAsync();
+            var roleClaims = await _context.RoleClaims
+                .Where(rc => roleIds.Contains(rc.RoleId))
+                .Select(rc => rc.Claim.ClaimName)
+                .ToListAsync();
+            return userClaims.Contains(claimName) || roleClaims.Contains(claimName);
+        }
     }
 } 

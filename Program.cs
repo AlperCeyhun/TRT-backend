@@ -51,6 +51,7 @@ builder.Services.AddScoped<IAssigneeService, AssigneeService>();
 builder.Services.AddScoped<ILanguageService, LanguageService>();
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<ICacheService, MemoryCacheService>();
+builder.Services.AddScoped<IMessageService, MessageService>();
 
 // Repository registrations
 builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -59,6 +60,7 @@ builder.Services.AddScoped<IAssigneeRepository, AssigneeRepository>();
 builder.Services.AddScoped<ITaskCategoryRepository, TaskCategoryRepository>();
 builder.Services.AddScoped<ILanguageRepository, LanguageRepository>();
 builder.Services.AddScoped<IClaimLanguageRepository, ClaimLanguageRepository>();
+builder.Services.AddScoped<IMessageRepository, MessageRepository>();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"), 
