@@ -1,5 +1,6 @@
 using TRT_backend.Models;
 using System.Security.Claims;
+using TRT_backend.Models.DTO;
 
 namespace TRT_backend.Services
 {
@@ -31,5 +32,7 @@ namespace TRT_backend.Services
         bool HasUserPermissionFromToken(ClaimsPrincipal user, string permission);
         List<int> GetAssignedTaskIdsFromToken(ClaimsPrincipal user);
         bool CanViewAllTasksFromToken(ClaimsPrincipal user);
+        Task<List<UserDto>> GetAllUserDtosAsync();
+        Task<UserDto> GetUserDtoByIdAsync(int id);
     }
 } 

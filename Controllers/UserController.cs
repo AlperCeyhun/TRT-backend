@@ -22,7 +22,7 @@ namespace TRT_backend.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAllUsers()
         {
-            var users = await _userService.GetAllUsersAsync();
+            var users = await _userService.GetAllUserDtosAsync();
             return Ok(users);
         }
         [EndpointSummary("Register")]
