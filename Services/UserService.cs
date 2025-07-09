@@ -91,8 +91,6 @@ namespace TRT_backend.Services
 
         public async Task<string> GenerateJwtTokenAsync(User user)
         {
-            var userWithRoles = await _userRepository.GetUserWithRolesAsync(user.Id);
-
             var assignedTaskIds = await _userRepository.GetAssignedTaskIdsAsync(user.Id);
 
             var claims = new List<Claim>

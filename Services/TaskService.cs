@@ -1,5 +1,3 @@
-using Microsoft.EntityFrameworkCore;
-using TRT_backend.Data;
 using TRT_backend.Models;
 using TRT_backend.Repositories;
 using System.Security.Claims;
@@ -9,13 +7,11 @@ namespace TRT_backend.Services
     public class TaskService : ITaskService
     {
         private readonly ITaskRepository _taskRepository;
-        private readonly AppDbContext _context;
         private readonly ICacheService _cache;
 
-        public TaskService(ITaskRepository taskRepository, AppDbContext context, ICacheService cache)
+        public TaskService(ITaskRepository taskRepository, ICacheService cache)
         {
             _taskRepository = taskRepository;
-            _context = context;
             _cache = cache;
         }
 
@@ -169,14 +165,7 @@ namespace TRT_backend.Services
 
         public async Task AssignUserToTaskAsync(int taskId, int userId)
         {
-            var assignee = new Assignee
-            {
-                TaskId = taskId,
-                UserId = userId
-            };
-            
-            _context.Assignees.Add(assignee);
-            await _context.SaveChangesAsync();
+            await _taskRepository.AssignUserToTaskAsync(taskId, userId);
             
             // Cache'leri temizle
             _cache.Remove($"user_assigned_task_{userId}_{taskId}");

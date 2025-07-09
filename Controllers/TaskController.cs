@@ -22,14 +22,14 @@ namespace TRT_backend.Controllers
             _userService = userService;
             _taskCategoryRepository = taskCategoryRepository;
         }
-
+        [EndpointSummary("CreateTask")]
         [Tags("TaskManagement")]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateTaskDto dto)
         {
             var userId = _userService.GetUserIdFromToken(User);
             
-            if (!_userService.HasUserPermissionFromToken(User, "Add Task"))
+            if (!_userService.HasUserPermissionFromToken(User, "AddTask"))
                 return StatusCode(403, "You don't have permission to add task.");
 
             // Kategori kontrolü
@@ -37,7 +37,7 @@ namespace TRT_backend.Controllers
             {
                 var category = await _taskCategoryRepository.GetByIdAsync(dto.CategoryId.Value);
                 if (category == null)
-                    return BadRequest("Geçersiz kategori ID");
+                    return BadRequest("Invalid category ID");
             }
 
             var task = new TodoTask
@@ -63,7 +63,7 @@ namespace TRT_backend.Controllers
 
             return Ok(result);
         }
-
+        [EndpointSummary("GetTasks")]
         [Tags("TaskManagement")]
         [HttpGet]
         public async Task<IActionResult> GetTasks(int pageNumber = 1, int pageSize = 2)
@@ -137,14 +137,14 @@ namespace TRT_backend.Controllers
                 });
             }
         }
-
+        [EndpointSummary("DeleteTask")]
         [Tags("TaskManagement")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
             var userId = _userService.GetUserIdFromToken(User);
             
-            if (!_userService.HasUserPermissionFromToken(User, "Delete Task"))
+            if (!_userService.HasUserPermissionFromToken(User, "DeleteTask"))
                 return StatusCode(403, "You are not authorized to perform this operation.");
 
             var task = await _taskService.GetTaskByIdAsync(id);
@@ -165,7 +165,7 @@ namespace TRT_backend.Controllers
 
             return Ok();
         }
-
+        [EndpointSummary("UpdateTask")]
         [Tags("TaskManagement")]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] UpdateTaskDto updates)
@@ -188,15 +188,15 @@ namespace TRT_backend.Controllers
             if (!_userService.IsUserAdminFromToken(User))
             {
                 if (updates.Title != existingTask.Title && 
-                    !_userService.HasUserPermissionFromToken(User, "Edit Task Title"))
+                    !_userService.HasUserPermissionFromToken(User, "EditTaskTitle"))
                     return StatusCode(403, "You don't have permission to edit task title.");
                 
                 if (updates.Description != existingTask.Description && 
-                    !_userService.HasUserPermissionFromToken(User, "Edit Task Description"))
+                    !_userService.HasUserPermissionFromToken(User, "EditTaskDescription"))
                     return StatusCode(403, "You don't have permission to edit task description.");
                 
                 if (updates.Completed != existingTask.Completed && 
-                    !_userService.HasUserPermissionFromToken(User, "Edit Task Status"))
+                    !_userService.HasUserPermissionFromToken(User, "EditTaskStatus"))
                     return StatusCode(403, "You don't have permission to edit task status.");
             }
 

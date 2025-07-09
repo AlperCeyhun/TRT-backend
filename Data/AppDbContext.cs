@@ -145,28 +145,28 @@ modelBuilder.Entity<Message>()
 
             modelBuilder.Entity<ClaimLanguage>().HasData(
                 // Türkçe çeviriler
-                new ClaimLanguage { Id = 1, ClaimId = 1, LanguageId = 1, Name = "Görev Ekle", Description = "Yeni görev oluşturma izni" },
-                new ClaimLanguage { Id = 2, ClaimId = 2, LanguageId = 1, Name = "Görev Sil", Description = "Görev silme izni" },
-                new ClaimLanguage { Id = 3, ClaimId = 3, LanguageId = 1, Name = "Görev Başlığını Düzenle", Description = "Görev başlığını değiştirme izni" },
-                new ClaimLanguage { Id = 4, ClaimId = 4, LanguageId = 1, Name = "Görev Açıklamasını Düzenle", Description = "Görev açıklamasını değiştirme izni" },
-                new ClaimLanguage { Id = 5, ClaimId = 5, LanguageId = 1, Name = "Görev Durumunu Düzenle", Description = "Görev durumunu değiştirme izni" },
-                new ClaimLanguage { Id = 6, ClaimId = 6, LanguageId = 1, Name = "Görev Atayanları Düzenle", Description = "Görev atayanlarını değiştirme izni" },
+                new ClaimLanguage { Id = 1, ClaimId = 1, LanguageId = 1, Name = "GörevEkle", Description = "Yeni görev oluşturma izni" },
+                new ClaimLanguage { Id = 2, ClaimId = 2, LanguageId = 1, Name = "GörevSil", Description = "Görev silme izni" },
+                new ClaimLanguage { Id = 3, ClaimId = 3, LanguageId = 1, Name = "GörevBaşlığınıDüzenle", Description = "Görev başlığını değiştirme izni" },
+                new ClaimLanguage { Id = 4, ClaimId = 4, LanguageId = 1, Name = "GörevAçıklamasınıDüzenle", Description = "Görev açıklamasını değiştirme izni" },
+                new ClaimLanguage { Id = 5, ClaimId = 5, LanguageId = 1, Name = "GörevDurumunuDüzenle", Description = "Görev durumunu değiştirme izni" },
+                new ClaimLanguage { Id = 6, ClaimId = 6, LanguageId = 1, Name = "GörevAtayanlarıDüzenle", Description = "Görev atayanlarını değiştirme izni" },
                 
                 // İngilizce çeviriler
-                new ClaimLanguage { Id = 7, ClaimId = 1, LanguageId = 2, Name = "Add Task", Description = "Permission to create new task" },
-                new ClaimLanguage { Id = 8, ClaimId = 2, LanguageId = 2, Name = "Delete Task", Description = "Permission to delete task" },
-                new ClaimLanguage { Id = 9, ClaimId = 3, LanguageId = 2, Name = "Edit Task Title", Description = "Permission to edit task title" },
-                new ClaimLanguage { Id = 10, ClaimId = 4, LanguageId = 2, Name = "Edit Task Description", Description = "Permission to edit task description" },
-                new ClaimLanguage { Id = 11, ClaimId = 5, LanguageId = 2, Name = "Edit Task Status", Description = "Permission to edit task status" },
-                new ClaimLanguage { Id = 12, ClaimId = 6, LanguageId = 2, Name = "Edit Task Assignees", Description = "Permission to edit task assignees" },
+                new ClaimLanguage { Id = 7, ClaimId = 1, LanguageId = 2, Name = "AddTask", Description = "Permission to create new task" },
+                new ClaimLanguage { Id = 8, ClaimId = 2, LanguageId = 2, Name = "DeleteTask", Description = "Permission to delete task" },
+                new ClaimLanguage { Id = 9, ClaimId = 3, LanguageId = 2, Name = "EditTaskTitle", Description = "Permission to edit task title" },
+                new ClaimLanguage { Id = 10, ClaimId = 4, LanguageId = 2, Name = "EditTaskDescription", Description = "Permission to edit task description" },
+                new ClaimLanguage { Id = 11, ClaimId = 5, LanguageId = 2, Name = "EditTaskStatus", Description = "Permission to edit task status" },
+                new ClaimLanguage { Id = 12, ClaimId = 6, LanguageId = 2, Name = "EditTaskAssignees", Description = "Permission to edit task assignees" },
                 
                 // Fransızca çeviriler
-                new ClaimLanguage { Id = 13, ClaimId = 1, LanguageId = 3, Name = "Ajouter Tâche", Description = "Permission d'ajouter une tâche" },
-                new ClaimLanguage { Id = 14, ClaimId = 2, LanguageId = 3, Name = "Supprimer Tâche", Description = "Permission de supprimer une tâche" },
-                new ClaimLanguage { Id = 15, ClaimId = 3, LanguageId = 3, Name = "Modifier Titre Tâche", Description = "Permission de modifier le titre de la tâche" },
-                new ClaimLanguage { Id = 16, ClaimId = 4, LanguageId = 3, Name = "Modifier Description Tâche", Description = "Permission de modifier la description de la tâche" },
-                new ClaimLanguage { Id = 17, ClaimId = 5, LanguageId = 3, Name = "Modifier Statut Tâche", Description = "Permission de modifier le statut de la tâche" },
-                new ClaimLanguage { Id = 18, ClaimId = 6, LanguageId = 3, Name = "Modifier Assignés Tâche", Description = "Permission de modifier les assignés de la tâche" }
+                new ClaimLanguage { Id = 13, ClaimId = 1, LanguageId = 3, Name = "AjouterTâche", Description = "Permission d'ajouter une tâche" },
+                new ClaimLanguage { Id = 14, ClaimId = 2, LanguageId = 3, Name = "SupprimerTâche", Description = "Permission de supprimer une tâche" },
+                new ClaimLanguage { Id = 15, ClaimId = 3, LanguageId = 3, Name = "ModifierTitreTâche", Description = "Permission de modifier le titre de la tâche" },
+                new ClaimLanguage { Id = 16, ClaimId = 4, LanguageId = 3, Name = "ModifierDescriptionTâche", Description = "Permission de modifier la description de la tâche" },
+                new ClaimLanguage { Id = 17, ClaimId = 5, LanguageId = 3, Name = "ModifierStatutTâche", Description = "Permission de modifier le statut de la tâche" },
+                new ClaimLanguage { Id = 18, ClaimId = 6, LanguageId = 3, Name = "ModifierAssignésTâche", Description = "Permission de modifier les assignés de la tâche" }
             );
         
         }
