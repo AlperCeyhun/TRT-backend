@@ -1,6 +1,14 @@
-@TRT_backend_HostAddress = http://localhost:5195
+### Task'a kullanıcı ata
+POST http://localhost:5000/api/assignees/assign?taskId=1
+Content-Type: application/json
 
-GET {{TRT_backend_HostAddress}}/weatherforecast/
-Accept: application/json
+[2, 3, 5]
 
-###
+### Task'ın assignee'lerini listele
+GET http://localhost:5000/api/assignees/task/1
+
+### Kullanıcıya atanmış task'ları listele
+GET http://localhost:5000/api/assignees/user/2
+
+### Assignee sil
+DELETE http://localhost:5000/api/assignees/7
