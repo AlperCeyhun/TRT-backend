@@ -4,6 +4,8 @@ using TRT_backend.Models;
 using Microsoft.AspNetCore.Authorization;
 using TRT_backend.Models.DTO;
 using TRT_backend.Repositories;
+using System.Text.Json;
+using System.Text;
 
 namespace TRT_backend.Controllers
 {
@@ -16,10 +18,15 @@ namespace TRT_backend.Controllers
         private readonly IUserService _userService;
         private readonly ITaskCategoryRepository _taskCategoryRepository;
 
-        public TaskController(ITaskService taskService, IUserService userService, ITaskCategoryRepository taskCategoryRepository)
+        private readonly HttpClient _httpClient;
+        private readonly string _geminiApiKey = "AIzaSyAVK_w9msCcwJGL4jz69U8-i6t-JRQf6i8";
+
+
+        public TaskController(ITaskService taskService, IUserService userService, ITaskCategoryRepository taskCategoryRepository,HttpClient httpClient)
         {
             _taskService = taskService;
             _userService = userService;
+            _httpClient = httpClient;
             _taskCategoryRepository = taskCategoryRepository;
         }
 
@@ -28,6 +35,7 @@ namespace TRT_backend.Controllers
         public async Task<IActionResult> Create([FromBody] CreateTaskDto dto)
         {
             var userId = _userService.GetUserIdFromToken(User);
+
             
             if (!_userService.HasUserPermissionFromToken(User, "Add Task"))
                 return StatusCode(403, "You don't have permission to add task.");
@@ -53,15 +61,60 @@ namespace TRT_backend.Controllers
            
             await _taskService.AssignUserToTaskAsync(createdTask.Id, userId);
 
+            var estimatedDuration = await GetEstimatedDurationFromGemini(dto);
+
             var result = new
             {
                 createdTask.Id,
                 createdTask.Title,
                 createdTask.Description,
-                createdTask.Completed
+                createdTask.Completed,
+                EstimatedDuration = estimatedDuration
             };
 
             return Ok(result);
+        }
+
+        private async Task<string> GetEstimatedDurationFromGemini(CreateTaskDto dto)
+        {
+            var prompt = $@" 
+            Bir görev atandı.Görev bilgileri :
+            Görev Adı: {dto.Title}
+            Acıklama : {dto.Description}
+            Aciliyet : {(dto.CategoryId.HasValue ? dto.CategoryId.ToString() : "bilinmyor")}
+
+            Bu görevin ortalama tamamlanma süresi kaç saat/gün olur? Sadece süreyi belirt.";
+
+            var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={_geminiApiKey}";
+
+            var requestBody = new
+            {
+                contents = new[]
+                {
+                    new {
+                        parts = new[] {
+                            new { text = prompt }
+                        }
+                    }
+                }
+            };
+
+            var content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
+            var response = await _httpClient.PostAsync(url, content);
+            var json = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+                return "Tahmin yapılamadı";
+
+            using var doc = JsonDocument.Parse(json);
+            return doc.RootElement
+                .GetProperty("candidates")[0]
+                .GetProperty("content")
+                .GetProperty("parts")[0]
+                .GetProperty("text")
+                .GetString();
+
+
         }
 
         [Tags("TaskManagement")]
