@@ -18,7 +18,7 @@ namespace TRT_backend.Controllers
             _assigneeService = assigneeService;
             _userService = userService;
         }
-
+        [EndpointSummary("AssignUsersToTask")]
         [Tags("AssigneeManagement")]
         [HttpPost("assign")]
         public async Task<IActionResult> AssignUsersToTask(int taskId, [FromBody] List<int> userIds)
@@ -34,6 +34,7 @@ namespace TRT_backend.Controllers
             return Ok("User(s) assigned successfully.");
         }
 
+        [EndpointSummary("GetAssigneesForTask")]
         [Tags("AssigneeManagement")]
         [HttpGet("task/{taskId}")]
         public async Task<IActionResult> GetAssigneesForTask(int taskId)
@@ -45,7 +46,7 @@ namespace TRT_backend.Controllers
                 Username = a.User.username
             }));
         }
-
+        [EndpointSummary("GetTasksForUser")]
         [Tags("AssigneeManagement")]
         [HttpGet("user/{userId}")]
         public async Task<IActionResult> GetTasksForUser(int userId)
@@ -69,7 +70,7 @@ namespace TRT_backend.Controllers
                 }).ToList()
             }));
         }
-
+        [EndpointSummary("UnassignUserFromTask")]
         [Tags("AssigneeManagement")]
         [HttpDelete]
         public async Task<IActionResult> UnassignUserFromTask(int taskId, int userId)

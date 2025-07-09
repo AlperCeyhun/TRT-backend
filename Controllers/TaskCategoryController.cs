@@ -16,7 +16,7 @@ namespace TRT_backend.Controllers
             _taskCategoryRepository = taskCategoryRepository;
         }
 
-    
+        [EndpointSummary("GetAllTaskCategories")]
         [Tags("TaskCategoryManagement")]
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -36,7 +36,7 @@ namespace TRT_backend.Controllers
             return Ok(categoryDtos);
         }
 
-       
+        [EndpointSummary("GetTaskCategoryById")]
         [Tags("TaskCategoryManagement")]
         [HttpGet("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -62,7 +62,7 @@ namespace TRT_backend.Controllers
             return Ok(categoryDto);
         }
 
-        
+        [EndpointSummary("CreateTaskCategory")]
         [Tags("TaskCategoryManagement")]
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
@@ -96,7 +96,7 @@ namespace TRT_backend.Controllers
             return CreatedAtAction(nameof(GetById), new { id = category.Id }, categoryDto);
         }
 
-        
+        [EndpointSummary("UpdateTaskCategory")]
         [Tags("TaskCategoryManagement")]
         [HttpPut("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -142,7 +142,7 @@ namespace TRT_backend.Controllers
             return Ok(categoryDto);
         }
 
-        
+        [EndpointSummary("DeleteTaskCategory")]
         [Tags("TaskCategoryManagement")]
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]

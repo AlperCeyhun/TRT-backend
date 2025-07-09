@@ -5,6 +5,7 @@ using System.Security.Claims;
 using System.Text;
 using TRT_backend.Data;
 using TRT_backend.Models;
+using TRT_backend.Models.DTO;
 using TRT_backend.Repositories;
 
 namespace TRT_backend.Services
@@ -42,7 +43,6 @@ namespace TRT_backend.Services
             
             if (cachedUser != null)
                 return cachedUser;
-
             var user = await _userRepository.GetUserWithRolesAsync(id);
             if (user != null)
                 _cache.Set(cacheKey, user, TimeSpan.FromMinutes(30));
@@ -91,8 +91,6 @@ namespace TRT_backend.Services
 
         public async Task<string> GenerateJwtTokenAsync(User user)
         {
-            var userWithRoles = await _userRepository.GetUserWithRolesAsync(user.Id);
-
             var assignedTaskIds = await _userRepository.GetAssignedTaskIdsAsync(user.Id);
 
             var claims = new List<Claim>
@@ -288,6 +286,27 @@ namespace TRT_backend.Services
             var roles = await _userRepository.GetAllRolesAsync();
             _cache.Set(cacheKey, roles, TimeSpan.FromHours(1));
             return roles;
+        }
+
+        public async Task<List<UserDto>> GetAllUserDtosAsync()
+        {
+            var users = await GetAllUsersAsync();
+            return users.Select(u => new UserDto
+            {
+                Id = u.Id,
+                username = u.username
+            }).ToList();
+        }
+
+        public async Task<UserDto> GetUserDtoByIdAsync(int id)
+        {
+            var user = await GetUserByIdAsync(id);
+            if (user == null) return null;
+            return new UserDto
+            {
+                Id = user.Id,
+                username = user.username
+            };
         }
     }
 } 

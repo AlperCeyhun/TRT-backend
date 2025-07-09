@@ -14,7 +14,7 @@ namespace TRT_backend.Controllers
         {
             _languageService = languageService;
         }
-
+        [EndpointSummary("GetAllLanguages")]
         [Tags("LanguageManagement")]
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -24,6 +24,7 @@ namespace TRT_backend.Controllers
             return Ok(languages);
         }
 
+        [EndpointSummary("GetClaimLanguageByClaimIdAndLanguageId")]
         [Tags("LanguageManagement")]
         [HttpGet("claim-language/{claimId}/{languageId}")]
         [ProducesResponseType(StatusCodes.Status200OK)]

@@ -17,14 +17,15 @@ namespace TRT_backend.Controllers
             _userService = userService;
         }
 
+        [EndpointSummary("GetAllUsers")]
         [Tags("UserManagement")]
         [HttpGet]
         public async Task<IActionResult> GetAllUsers()
         {
-            var users = await _userService.GetAllUsersAsync();
+            var users = await _userService.GetAllUserDtosAsync();
             return Ok(users);
         }
-    
+        [EndpointSummary("Register")]
         [Tags("UserManagement")]
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto dto)
@@ -39,7 +40,7 @@ namespace TRT_backend.Controllers
             
             return Ok("Register Successful.");
         }
-
+        [EndpointSummary("Login")]
         [Tags("UserManagement")]
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto dto)
@@ -60,7 +61,7 @@ namespace TRT_backend.Controllers
 
             return Ok(new { token = token, roleIds = roleIds });
         }
-
+        [EndpointSummary("AssignClaim")]
         [Tags("ClaimManagement")]
         [HttpPost("assign-claim")]
         [Authorize]
@@ -75,7 +76,7 @@ namespace TRT_backend.Controllers
             await _userService.AssignClaimToUserAsync(dto.UserId, dto.ClaimId);
             return Ok("Claim assigned to user.");
         }
-    
+        [EndpointSummary("RemoveClaim")]
         [Tags("ClaimManagement")]
         [HttpPost("remove-claim")]
         [Authorize]
@@ -90,7 +91,7 @@ namespace TRT_backend.Controllers
             await _userService.RemoveClaimFromUserAsync(dto.UserId, dto.ClaimId);
             return Ok("Claim removed from user.");
         }
-
+        [EndpointSummary("DeleteUser")]
         [Tags("UserManagement")]
         [HttpDelete("{id}")]
         [Authorize]
@@ -105,7 +106,7 @@ namespace TRT_backend.Controllers
             await _userService.DeleteUserAsync(id);
             return Ok("User deleted successfully.");
         }
-
+        [EndpointSummary("GetUserClaims")]
         [Tags("ClaimManagement")]
         [HttpGet("user-claims/{userId}")]
         public async Task<IActionResult> GetUserClaims(int userId)
@@ -113,7 +114,7 @@ namespace TRT_backend.Controllers
             var claims = await _userService.GetUserClaimsAsync(userId);
             return Ok(claims);
         }
-
+        [EndpointSummary("GetAllClaims")]
         [Tags("ClaimManagement")]
         [HttpGet("claims")]
         public async Task<IActionResult> GetAllClaims()
@@ -121,7 +122,7 @@ namespace TRT_backend.Controllers
             var claims = await _userService.GetAllClaimsAsync();
             return Ok(claims);
         }
-    
+        [EndpointSummary("GetAllRoles")]
         [Tags("UserManagement")]
         [HttpGet("roles")]
         public async Task<IActionResult> GetAllRoles()
